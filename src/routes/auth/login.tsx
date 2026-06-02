@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
 import { useMutation } from '@tanstack/react-query';
 import {useForm} from '@tanstack/react-form-start';
 import { loginFunc } from '@lib/server-functions/auth';
@@ -82,12 +82,12 @@ function LoginPage(): ReactElement<FC> {
                 <Field>
                   <div className="flex items-center">
                     <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                    <a
-                      href="#"
+                    <Link
+                      to="/auth/forgot-password"
                       className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                     >
                       Forgot your password?
-                    </a>
+                    </Link>
                   </div>
                   <Input
                     id={field.name}
@@ -106,7 +106,7 @@ function LoginPage(): ReactElement<FC> {
                 <Field>
                   <Button type="submit" disabled={!canSubmit || isSubmitting}>Login</Button>
                   <FieldDescription className="text-center">
-                    Don&apos;t have an account? <a href="#">Sign up</a>
+                    Don&apos;t have an account? <Link to="/auth/register">Sign up</Link>
                   </FieldDescription>
                 </Field>
               )}
