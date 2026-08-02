@@ -63,7 +63,7 @@ function NavUser({ user }: AppSidebarProps): ReactElement<FC> {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               disabled={logoutMutation.isPending}
-              onSelect={(): void => logoutMutation.mutate({})}
+              onClick={(): void => logoutMutation.mutate({})}
             >
               <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} className="size-4" />
               Log out

@@ -63,8 +63,12 @@ export function useBoardMutations(boardId: string): {
 
   const moveCardMutation = useMutation({
     mutationFn: moveCardFunc,
-    onMutate: async ({ data }): Promise<void> => {
-      await queryClient.cancelQueries({ queryKey: boardKey });
+    // Patch the cache to match the just-dropped arrangement, but do NOT refetch
+    // on success: BoardCanvas already shows the new order from its own state, so
+    // the only job here is keeping the cache in sync (so its reconcile stays a
+    // no-op). A success refetch would briefly return pre-commit data and flicker.
+    onMutate: ({ data }): void => {
+      void queryClient.cancelQueries({ queryKey: boardKey });
       queryClient.setQueryData(boardKey, (current: BoardDetail | undefined): BoardDetail | undefined => {
         if (current == null) return current;
 
@@ -81,14 +85,13 @@ export function useBoardMutations(boardId: string): {
     onError: (error: Error): void => {
       toast.error(error.message);
       invalidateBoard();
-    },
-    onSettled: invalidateBoard
+    }
   });
 
   const moveListMutation = useMutation({
     mutationFn: moveListFunc,
-    onMutate: async ({ data }): Promise<void> => {
-      await queryClient.cancelQueries({ queryKey: boardKey });
+    onMutate: ({ data }): void => {
+      void queryClient.cancelQueries({ queryKey: boardKey });
       queryClient.setQueryData(boardKey, (current: BoardDetail | undefined): BoardDetail | undefined => {
         if (current == null) return current;
 
@@ -105,8 +108,7 @@ export function useBoardMutations(boardId: string): {
     onError: (error: Error): void => {
       toast.error(error.message);
       invalidateBoard();
-    },
-    onSettled: invalidateBoard
+    }
   });
 
   const createList = useMutation({

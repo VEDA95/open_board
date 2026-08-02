@@ -1,15 +1,12 @@
-import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import { useEffect, useMemo, useState } from 'react';
 import { Kanban, KanbanBoard, KanbanOverlay } from '@components/reui/kanban';
 import { ListColumn } from '@components/board/list-column';
-import { CardItemContent } from '@components/board/card-item';
 import { AddList } from '@components/board/add-list';
 import { RenameDialog } from '@components/board/rename-dialog';
 import { ConfirmDialog } from '@components/layout/confirm-dialog';
 import { useBoardMutations } from '@lib/hooks/use-board';
 import { positionBetween } from '@lib/utils/position';
 import type { FC, ReactElement, ReactNode } from 'react';
-import type { UniqueIdentifier } from '@dnd-kit/core';
 import type { KanbanCommitMeta } from '@components/reui/kanban';
 import type { List } from '@lib/server-functions/lists';
 import type { Card } from '@lib/server-functions/cards';
@@ -33,26 +30,51 @@ function buildColumns(lists: Array<List>, cards: Array<Card>): Columns {
     if (card.list in columns) columns[card.list].push(card);
   }
 
+  for (const listId of Object.keys(columns)) {
+    columns[listId].sort(
+      (a, b): number => (a.position ?? Infinity) - (b.position ?? Infinity)
+    );
+  }
+
   return columns;
+}
+
+// Arrangement (list order + card order per list) plus content that shows on a
+// card. Used to decide whether incoming server data actually differs from what
+// is on screen — a matching refetch (e.g. our own persisted move) is skipped so
+// the board never re-renders mid-interaction and flickers.
+function signature(columns: Columns): string {
+  return Object.entries(columns)
+    .map(([listId, cards]): string =>
+      `${listId}:${cards.map((card): string => `${card.id}~${card.name}~${card.is_active}`).join(',')}`
+    )
+    .join('|');
 }
 
 export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactElement<FC> {
   const mutations = useBoardMutations(boardId);
   const serverColumns = useMemo((): Columns => buildColumns(lists, cards), [lists, cards]);
-  // reUI's Kanban is controlled: it reorders `value` while a drag is in
-  // flight. Interim states live here; once a drag commits, the optimistic
-  // cache patch takes over and this resets to mirror the server data.
-  const [dragColumns, setDragColumns] = useState<Columns | null>(null);
-  const columns = dragColumns ?? serverColumns;
+  const serverSignature = useMemo((): string => signature(serverColumns), [serverColumns]);
+  // Single source of truth for what the board shows. reUI drives this directly
+  // during a drag via onValueChange; our own move persists optimistically so
+  // the server data lands back identical and the reconcile below is a no-op.
+  const [columns, setColumns] = useState<Columns>(serverColumns);
   const listsById = useMemo(() => new Map(lists.map((list) => [list.id, list])), [lists]);
-  const cardsById = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
   const [renameList, setRenameList] = useState<List | null>(null);
   const [deleteList, setDeleteList] = useState<List | null>(null);
   const [renameCard, setRenameCard] = useState<Card | null>(null);
 
-  const handleCommit = (value: Columns, meta: KanbanCommitMeta<Card>): void => {
-    setDragColumns(null);
+  // Adopt server data only when it genuinely differs from what's displayed.
+  // This is what makes drops flicker-free: after a move the optimistic cache
+  // matches the on-screen arrangement, so the signatures match and no rerender
+  // is forced; external changes (create/rename/delete/archive) differ and apply.
+  useEffect((): void => {
+    setColumns((current): Columns =>
+      signature(current) === serverSignature ? current : serverColumns
+    );
+  }, [serverSignature, serverColumns]);
 
+  const handleCommit = (value: Columns, meta: KanbanCommitMeta<Card>): void => {
     if (meta.kind === 'column') {
       const keys = Object.keys(value);
       const index = keys.indexOf(meta.activeContainer);
@@ -74,7 +96,6 @@ export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactE
     if (!(meta.overContainer in value)) return;
 
     const targetCards = value[meta.overContainer];
-
     const index = targetCards.findIndex((card): boolean => card.id === activeId);
 
     if (index === -1) return;
@@ -93,13 +114,12 @@ export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactE
     <div className="flex-1 overflow-x-auto p-4 md:p-6">
       <Kanban
         value={columns}
-        onValueChange={setDragColumns}
+        onValueChange={setColumns}
         getItemValue={(card: Card): string => card.id}
         onValueCommit={handleCommit}
-        onDragCancel={(): void => setDragColumns(null)}
         className="h-full"
       >
-        <KanbanBoard className="flex h-full items-start gap-4 sm:grid-cols-none">
+        <KanbanBoard className="flex items-start gap-4 sm:grid-cols-none">
           {Object.keys(columns).map((listId): ReactNode => {
             const list = listsById.get(listId);
 
@@ -118,10 +138,7 @@ export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactE
                 onDeleteList={setDeleteList}
                 onRenameCard={setRenameCard}
                 onArchiveCard={(card: Card): void => {
-                  mutations.setCardActive.mutate(
-                    { data: { cardId: card.id, isActive: false } },
-                    { onSuccess: (): void => { toast.success('Card archived'); } }
-                  );
+                  mutations.setCardActive.mutate({ data: { cardId: card.id, isActive: false } });
                 }}
               />
             );
@@ -133,25 +150,9 @@ export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactE
             }}
           />
         </KanbanBoard>
-        <KanbanOverlay>
-          {({ value, variant }: { value: UniqueIdentifier; variant: 'column' | 'item' }): ReactNode => {
-            if (variant === 'item') {
-              const card = cardsById.get(String(value));
-
-              return card != null ? <CardItemContent card={card} /> : null;
-            }
-
-            const list = listsById.get(String(value));
-
-            return list != null
-              ? (
-                  <div className="bg-muted/80 w-72 rounded-xl border p-2 text-sm font-medium">
-                    {list.name}
-                  </div>
-                )
-              : null;
-          }}
-        </KanbanOverlay>
+        {/* Dashed placeholder that follows the cursor, matching the reUI
+            example — the real item stays in place at reduced opacity. */}
+        <KanbanOverlay className="bg-muted/20 rounded-xl border-2 border-dashed" />
       </Kanban>
       {renameList != null && (
         <RenameDialog

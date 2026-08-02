@@ -660,7 +660,9 @@ function KanbanColumn({
 
   const style = {
     transition,
-    transform: CSS.Transform.toString(transform),
+    // Translate only, never scale: variable-height columns/cards would
+    // otherwise get a scaleX/scaleY from dnd-kit and visibly warp mid-drag.
+    transform: CSS.Translate.toString(transform),
   } as CSSProperties;
 
   const defaultProps = isOverlay
@@ -776,7 +778,9 @@ function KanbanItem({
 
   const style = {
     transition,
-    transform: CSS.Transform.toString(transform),
+    // Translate only, never scale: variable-height columns/cards would
+    // otherwise get a scaleX/scaleY from dnd-kit and visibly warp mid-drag.
+    transform: CSS.Translate.toString(transform),
   } as CSSProperties;
 
   const defaultProps = isOverlay

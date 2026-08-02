@@ -68,12 +68,12 @@ function BoardPage(): ReactElement<FC> {
               <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={(): void => setEditOpen(true)}>
+              <DropdownMenuItem onClick={(): void => setEditOpen(true)}>
                 Edit board
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
-                onSelect={(): void => setDeleteOpen(true)}
+                onClick={(): void => setDeleteOpen(true)}
               >
                 Delete board
               </DropdownMenuItem>

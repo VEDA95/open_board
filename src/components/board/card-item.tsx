@@ -1,6 +1,7 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { MoreHorizontalIcon } from '@hugeicons/core-free-icons';
 import { KanbanItem, KanbanItemHandle } from '@components/reui/kanban';
+import { Card, CardContent } from '@components/ui/card';
 import { Button } from '@components/ui/button';
 import {
   DropdownMenu,
@@ -9,44 +10,45 @@ import {
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu';
 import type { FC, ReactElement } from 'react';
-import type { Card } from '@lib/server-functions/cards';
+import type { Card as CardType } from '@lib/server-functions/cards';
 
 type CardItemProps = {
-  card: Card;
-  onRename?: (card: Card) => void;
-  onArchive?: (card: Card) => void;
+  card: CardType;
+  onRename?: (card: CardType) => void;
+  onArchive?: (card: CardType) => void;
 };
-
-// Shared visual for both the sortable item and the drag overlay ghost.
-export function CardItemContent({ card }: { card: Card }): ReactElement<FC> {
-  return (
-    <div className="bg-card text-card-foreground rounded-lg border p-3 text-sm shadow-xs">
-      {card.name}
-    </div>
-  );
-}
 
 export function CardItem({ card, onRename, onArchive }: CardItemProps): ReactElement<FC> {
   return (
-    <KanbanItem value={card.id} className="group/card relative">
+    <KanbanItem value={card.id}>
       <KanbanItemHandle>
-        <CardItemContent card={card} />
+        <Card className="group/card relative py-0">
+          <CardContent className="flex items-center justify-between gap-2 px-3 py-2.5">
+            <span className="line-clamp-2 text-sm">{card.name}</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={(
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="shrink-0 opacity-0 group-hover/card:opacity-100 data-[popup-open]:opacity-100"
+                  />
+                )}
+              >
+                <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={(): void => onRename?.(card)}>
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(): void => onArchive?.(card)}>
+                  Archive
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardContent>
+        </Card>
       </KanbanItemHandle>
-      <div className="absolute top-1.5 right-1.5 opacity-0 transition-opacity group-hover/card:opacity-100">
-        <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="size-6" />}>
-            <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} className="size-3.5" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onSelect={(): void => onRename?.(card)}>
-              Rename
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={(): void => onArchive?.(card)}>
-              Archive
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
     </KanbanItem>
   );
 }

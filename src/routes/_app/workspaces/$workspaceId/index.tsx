@@ -78,12 +78,12 @@ function WorkspacePage(): ReactElement<FC> {
               <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={(): void => setEditOpen(true)}>
+              <DropdownMenuItem onClick={(): void => setEditOpen(true)}>
                 Edit workspace
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
-                onSelect={(): void => setDeleteOpen(true)}
+                onClick={(): void => setDeleteOpen(true)}
               >
                 Delete workspace
               </DropdownMenuItem>
