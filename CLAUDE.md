@@ -69,6 +69,13 @@ Schema lives in `supabase/supabase/migrations/`. Core kanban tables (`workspaces
 - Inserts into `workspaces`/`boards` must set `user_id` explicitly to `auth.uid()` — the insert policies require it and the columns have no default.
 - Seed (`supabase/supabase/seed.sql`): permissions, roles `superuser`/`user`/`admin`, storage buckets, and the `user` role as a `global` default role.
 
+### Kanban board (Phase 2 patterns)
+
+- **Ordering** is numeric-midpoint fractional positioning (`src/lib/utils/position.ts`): new items append at `max + 1024`, moves take the midpoint of their new neighbors. `moveCardFunc`/`moveListFunc` check the sibling positions after each move (`hasDegenerateGaps`) and call the `rebalance_card_positions` / `rebalance_list_positions` DB functions (SECURITY INVOKER, so RLS still applies) when gaps drop below `1e-6`.
+- **Drag & drop** uses the reUI Kanban component (`src/components/reui/kanban.tsx`, installed via `pnpm dlx shadcn@latest add @reui/kanban`; dnd-kit under the hood). It is controlled: `value: Record<listId, Card[]>` + `onValueChange` + `onValueCommit(value, meta)`. `BoardCanvas` derives the canonical columns from the `['board', id]` query, holds interim drag states in local state (`dragColumns`), and on commit computes the fractional position from the drop neighbors and fires the move mutation. Items drag via `KanbanItemHandle` (listeners live on the handle, not the item).
+- **Board data** comes from one `getBoardFunc(boardId)` payload (board + lists + active cards) so a single `['board', id]` invalidation refreshes everything. Move mutations patch the cache optimistically in `onMutate` (drops never snap back) and invalidate on settle. Card archive = `cards.is_active = false`; the archived drawer lists them under `['board', id, 'archived']`.
+- **RLS gotcha**: SQL functions here run with `SET search_path TO ''` — every referenced function/table inside them must be schema-qualified (`public.check_board_permissions(...)`, not `check_board_permissions(...)`). An unqualified call errors at runtime with "function does not exist" (`check_function_bodies = off` hides it at migration time).
+
 ### Path aliases (tsconfig)
 
 - `@/*` → `src/*`

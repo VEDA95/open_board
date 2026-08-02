@@ -129,6 +129,28 @@ drop policy if exists "boards_select" on "public"."boards";
 using (((user_id = ( SELECT auth.uid() AS uid)) OR public.check_board_permissions(id)));
 
 
+-- check_card_access ran with an empty search_path but called
+-- check_board_permissions unqualified, so every card policy errored with
+-- "function does not exist".
+CREATE OR REPLACE FUNCTION public.check_card_access(card_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  board_id uuid;
+BEGIN
+  SELECT l.board INTO board_id
+  FROM public.cards c
+  JOIN public.lists l ON l.id = c.list
+  WHERE c.id = card_id;
+
+  RETURN public.check_board_permissions(board_id);
+END;
+$function$
+;
+
 -- Permission paths for the current user, used by the frontend to gate UI.
 CREATE OR REPLACE FUNCTION public.get_user_permission_paths()
  RETURNS SETOF character varying
