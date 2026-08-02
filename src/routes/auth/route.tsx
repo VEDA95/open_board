@@ -1,6 +1,6 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router"
-import { ModeToggle } from "@components/theme-toggle"
-import type { ReactElement, FC } from "react"
+import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
+import { ModeToggle } from '@components/theme-toggle';
+import type { FC, ReactElement } from 'react';
 
 function AuthLayout(): ReactElement<FC> {
   return (
@@ -14,7 +14,17 @@ function AuthLayout(): ReactElement<FC> {
         <ModeToggle />
       </footer>
     </div>
-  )
+  );
 }
 
-export const Route = createFileRoute("/auth")({ component: AuthLayout })
+export const Route = createFileRoute('/auth')({
+  // Authenticated users have no business on the auth pages — except
+  // reset-password, where the recovery-code exchange signs the user in
+  // mid-flow before they choose their new password.
+  beforeLoad: ({ context, location }): void => {
+    if (context.user != null && !location.pathname.startsWith('/auth/reset-password')) {
+      throw redirect({ to: '/' });
+    }
+  },
+  component: AuthLayout,
+});

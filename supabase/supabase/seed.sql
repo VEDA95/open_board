@@ -62,6 +62,9 @@ INSERT INTO "public"."role_permissions" ("role", "permission") VALUES
 INSERT INTO "public"."user_roles" ("user_id", "role") VALUES
 	('b61effb4-2d7f-43ee-b5f6-745705a59957', 'dbeb55a3-4f17-48f9-b099-d4818fb4d528');
 
+INSERT INTO "public"."default_roles" ("role", "type") VALUES
+	('68bfba99-62c5-4cd5-8ee3-dd12a35c9d73', 'global');
+
 SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 1, false);
 
 SELECT pg_catalog.setval('"public"."general_settings_id_seq"', 1, false);

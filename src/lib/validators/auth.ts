@@ -21,6 +21,10 @@ export const forgotPasswordValidator = z.object({
   email: z.email()
 });
 
+export const exchangeCodeValidator = z.object({
+  code: z.string().min(1)
+});
+
 export const resetPasswordValidator = z.object({
   password: z.string().min(8),
   confirmPassword: z.string().min(8),

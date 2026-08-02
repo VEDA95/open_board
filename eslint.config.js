@@ -3,6 +3,9 @@
 import { tanstackConfig } from '@tanstack/eslint-config';
 
 export default [
+  {
+    ignores: ['supabase/**', 'src/lib/types/supabase.ts', 'src/routeTree.gen.ts'],
+  },
   ...tanstackConfig,
   {
     rules: {

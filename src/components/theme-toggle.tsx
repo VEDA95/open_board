@@ -1,17 +1,17 @@
-import { Moon02Icon, Sun01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Button } from "@/components/ui/button"
+import { Moon02Icon, Sun01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@components/ui/dropdown-menu"
-import { useTheme } from "@lib/context/theme"
-import type { ReactElement, FC } from "react"
+} from '@components/ui/dropdown-menu';
+import { useTheme } from '@lib/context/theme';
+import type { FC, ReactElement } from 'react';
+import { Button } from '@/components/ui/button';
 
 export function ModeToggle(): ReactElement<FC> {
-  const { setTheme } = useTheme()
+  const { setTheme } = useTheme();
 
   return (
     <DropdownMenu>
@@ -27,16 +27,16 @@ export function ModeToggle(): ReactElement<FC> {
         <span className="sr-only">Toggle theme</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={(): void => setTheme("light")}>
+        <DropdownMenuItem onClick={(): void => setTheme('light')}>
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={(): void => setTheme("dark")}>
+        <DropdownMenuItem onClick={(): void => setTheme('dark')}>
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={(): void => setTheme("system")}>
+        <DropdownMenuItem onClick={(): void => setTheme('system')}>
           System
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

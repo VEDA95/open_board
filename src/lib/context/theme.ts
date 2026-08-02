@@ -1,16 +1,13 @@
-import { createContext, useContext } from "react"
-import type { ThemeProviderState } from "@lib/types/theme"
+import { createContext, useContext } from 'react';
+import type { ThemeProviderState } from '@lib/types/theme';
 
 const ThemeProviderContext = createContext<ThemeProviderState>({
-  theme: "system",
+  theme: 'system',
   setTheme: (): void => {},
-})
+});
 
 function useTheme(): ThemeProviderState {
-  const context = useContext(ThemeProviderContext)
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider")
-  return context
+  return useContext(ThemeProviderContext);
 }
 
-export { ThemeProviderContext, useTheme }
+export { ThemeProviderContext, useTheme };
