@@ -705,6 +705,13 @@ export type Database = {
           uploaded_at: string
         }[]
       }
+      get_thumbnail_paths: {
+        Args: { object_ids: string[] }
+        Returns: {
+          id: string
+          object_name: string
+        }[]
+      }
       get_user_permission_ids: { Args: never; Returns: string[] }
       get_user_permission_paths: { Args: never; Returns: string[] }
       rebalance_card_positions: {

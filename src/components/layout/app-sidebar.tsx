@@ -1,10 +1,12 @@
 import { Link, useParams, useRouter } from '@tanstack/react-router';
 import { useMutation } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Folder01Icon, KanbanIcon, Logout01Icon, UnfoldMoreIcon } from '@hugeicons/core-free-icons';
+import { Folder01Icon, KanbanIcon, Logout01Icon, UnfoldMoreIcon, UserIcon } from '@hugeicons/core-free-icons';
 import { logoutFunc } from '@lib/server-functions/auth';
 import { useWorkspaces } from '@lib/hooks/use-workspaces';
-import { Avatar, AvatarFallback } from '@components/ui/avatar';
+import { useMyProfile } from '@lib/hooks/use-profile';
+import { profileLabel } from '@lib/utils/format-date';
+import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +38,7 @@ type AppSidebarProps = {
 
 function NavUser({ user }: AppSidebarProps): ReactElement<FC> {
   const router = useRouter();
+  const profileQuery = useMyProfile();
   const logoutMutation = useMutation({
     mutationFn: logoutFunc,
     onSuccess: (): void => {
@@ -43,7 +46,9 @@ function NavUser({ user }: AppSidebarProps): ReactElement<FC> {
       router.navigate({ to: '/auth/login' });
     }
   });
-  const initial = (user.email ?? '?').charAt(0).toUpperCase();
+  const displayName = profileQuery.data != null ? profileLabel(profileQuery.data.profile) : (user.email ?? '');
+  const avatarUrl = profileQuery.data?.avatarUrl ?? null;
+  const initial = (displayName || user.email || '?').charAt(0).toUpperCase();
 
   return (
     <SidebarMenu>
@@ -51,6 +56,7 @@ function NavUser({ user }: AppSidebarProps): ReactElement<FC> {
         <DropdownMenu>
           <DropdownMenuTrigger render={<SidebarMenuButton size="lg" />}>
             <Avatar className="size-8">
+              {avatarUrl != null && <AvatarImage src={avatarUrl} alt={displayName} />}
               <AvatarFallback>{initial}</AvatarFallback>
             </Avatar>
             <span className="truncate text-sm">{user.email}</span>
@@ -61,6 +67,10 @@ function NavUser({ user }: AppSidebarProps): ReactElement<FC> {
               <DropdownMenuLabel className="max-w-56 truncate">{user.email}</DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link to="/profile" />}>
+              <HugeiconsIcon icon={UserIcon} strokeWidth={2} className="size-4" />
+              Profile
+            </DropdownMenuItem>
             <DropdownMenuItem
               disabled={logoutMutation.isPending}
               onClick={(): void => logoutMutation.mutate({})}

@@ -16,6 +16,7 @@ import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-passw
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
+import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppWorkspacesIndexRouteImport } from './routes/_app/workspaces/index'
 import { Route as AppWorkspacesWorkspaceIdIndexRouteImport } from './routes/_app/workspaces/$workspaceId/index'
 import { Route as AppWorkspacesWorkspaceIdBoardsBoardIdRouteRouteImport } from './routes/_app/workspaces/$workspaceId/boards/$boardId/route'
@@ -56,6 +57,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => AuthRouteRoute,
 } as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppWorkspacesIndexRoute = AppWorkspacesIndexRouteImport.update({
   id: '/workspaces/',
   path: '/workspaces/',
@@ -89,6 +95,7 @@ const AppWorkspacesWorkspaceIdBoardsBoardIdCardsCardIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteRouteWithChildren
+  '/profile': typeof AppProfileRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteRouteWithChildren
+  '/profile': typeof AppProfileRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
+  '/_app/profile': typeof AppProfileRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/profile'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/profile'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/auth'
+    | '/_app/profile'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
@@ -225,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_app/profile': {
+      id: '/_app/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/workspaces/': {
       id: '/_app/workspaces/'
       path: '/workspaces'
@@ -282,12 +301,14 @@ const AppWorkspacesWorkspaceIdBoardsBoardIdRouteRouteWithChildren =
   )
 
 interface AppRouteRouteChildren {
+  AppProfileRoute: typeof AppProfileRoute
   AppWorkspacesIndexRoute: typeof AppWorkspacesIndexRoute
   AppWorkspacesWorkspaceIdIndexRoute: typeof AppWorkspacesWorkspaceIdIndexRoute
   AppWorkspacesWorkspaceIdBoardsBoardIdRouteRoute: typeof AppWorkspacesWorkspaceIdBoardsBoardIdRouteRouteWithChildren
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppProfileRoute: AppProfileRoute,
   AppWorkspacesIndexRoute: AppWorkspacesIndexRoute,
   AppWorkspacesWorkspaceIdIndexRoute: AppWorkspacesWorkspaceIdIndexRoute,
   AppWorkspacesWorkspaceIdBoardsBoardIdRouteRoute:

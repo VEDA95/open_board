@@ -99,6 +99,11 @@ Live updates use **Supabase Realtime broadcasts driven from the database**, not 
 - **Browser auth**: the websocket needs a JWT but auth is cookie-based, so `getRealtimeConfigFunc` returns `{ url, anonKey, token }` and `useRealtimeClient` (`src/lib/hooks/use-realtime.ts`) calls `client.realtime.setAuth(token)`. The token query refetches every 45 min to re-auth before the 1h expiry.
 - **Client hooks**: `useBoardRealtime(boardId)` / `useWorkspaceRealtime(workspaceId)` subscribe to the private topic (`{ config: { private: true } }`, event `db_change`) and map `payload.table` → `queryClient.invalidateQueries` (board payload, and the specific `['card', id]` / `['labels', boardId]` when relevant). No optimistic patching from payloads — a self-originated echo costs at most one deduped refetch. Wired into the board layout route and the workspace-detail route.
 
+### Profile (Phase 6)
+
+- `getMyProfileFunc` returns the current user's profile + email + a public `avatarUrl`; `_app/profile.tsx` edits username/name (unique-username violation `23505` → 409 "already taken"), changes password (`auth.updateUser`), and uploads an avatar. The sidebar user menu shows the avatar and links to `/profile`.
+- **Avatars** go in the **public** `thumbnails` bucket (uploaded to `{auth.uid()}/{uuid}/{filename}`), so display uses a plain public URL — no signing. `profiles.thumbnail` is a `storage.objects` id; `get_thumbnail_paths(uuid[])` (SECURITY DEFINER, batchable) resolves ids → paths so the URL can be built. Uploading a new avatar removes the previous object via the admin client.
+
 ### Path aliases (tsconfig)
 
 - `@/*` → `src/*`
