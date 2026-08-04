@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Add01Icon, MoreHorizontalIcon } from '@hugeicons/core-free-icons';
 import { useDeleteWorkspace, useWorkspace, workspaceQueryOptions } from '@lib/hooks/use-workspaces';
+import { useWorkspaceRealtime } from '@lib/hooks/use-workspace-realtime';
 import { WorkspaceFormDialog } from '@components/workspace/workspace-form-dialog';
 import { BoardFormDialog } from '@components/board/board-form-dialog';
 import { ConfirmDialog } from '@components/layout/confirm-dialog';
@@ -27,6 +28,7 @@ function WorkspacePage(): ReactElement<FC> {
   const { workspaceId } = Route.useParams();
   const router = useRouter();
   const workspaceQuery = useWorkspace(workspaceId);
+  useWorkspaceRealtime(workspaceId);
   const deleteMutation = useDeleteWorkspace();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);

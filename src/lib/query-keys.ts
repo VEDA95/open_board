@@ -8,5 +8,6 @@ export const queryKeys = {
   comments: (cardId: string) => ['comments', cardId] as const,
   labels: (boardId: string) => ['labels', boardId] as const,
   profiles: ['profiles'] as const,
+  realtimeConfig: ['realtime-config'] as const,
   settings: ['settings'] as const,
 };

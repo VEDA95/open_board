@@ -5,6 +5,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Archive02Icon, MoreHorizontalIcon, Tag01Icon } from '@hugeicons/core-free-icons';
 import { boardQueryOptions, useBoard } from '@lib/hooks/use-board';
 import { useDeleteBoard } from '@lib/hooks/use-boards';
+import { useBoardRealtime } from '@lib/hooks/use-board-realtime';
 import { BoardCanvas } from '@components/board/board-canvas';
 import { BoardFormDialog } from '@components/board/board-form-dialog';
 import { ArchivedCardsSheet } from '@components/board/archived-cards-sheet';
@@ -26,6 +27,7 @@ function BoardLayout(): ReactElement<FC> {
   const router = useRouter();
   const boardQuery = useBoard(boardId);
   const deleteMutation = useDeleteBoard(workspaceId);
+  useBoardRealtime(boardId);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [archivedOpen, setArchivedOpen] = useState(false);
