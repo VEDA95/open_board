@@ -175,6 +175,36 @@ export type Database = {
           },
         ]
       }
+      card_labels: {
+        Row: {
+          card: string
+          label: string
+        }
+        Insert: {
+          card: string
+          label: string
+        }
+        Update: {
+          card?: string
+          label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_labels_card_fkey"
+            columns: ["card"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_labels_label_fkey"
+            columns: ["label"]
+            isOneToOne: false
+            referencedRelation: "labels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cards: {
         Row: {
           actual_time_spent: number | null

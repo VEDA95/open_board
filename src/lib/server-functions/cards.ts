@@ -3,17 +3,32 @@ import { setResponseStatus } from '@tanstack/react-start/server';
 import { getSupabaseServerClient } from '@lib/utils/supabase';
 import { requireBoardAccess, requireUser } from '@lib/utils/permissions';
 import { INITIAL_SPACING, hasDegenerateGaps } from '@lib/utils/position';
+import { logActivity } from '@lib/server-functions/activity';
 import {
   cardIdValidator,
   createCardValidator,
   moveCardValidator,
   renameCardValidator,
-  setCardActiveValidator
+  setCardActiveValidator,
+  setCardAssigneeValidator,
+  updateCardDetailsValidator
 } from '@lib/validators/card';
 import { boardIdValidator } from '@lib/validators/board';
 import type { Tables } from '@lib/types/supabase';
+import type { Label } from '@lib/server-functions/labels';
+import type { ChecklistItem } from '@lib/server-functions/checklists';
 
 export type Card = Tables<'cards'>;
+export type Profile = Tables<'profiles'>;
+export type CardActivity = Tables<'card_activities'>;
+export type CardActivityWithAuthor = CardActivity & { author: Profile | null };
+export type CardDetail = {
+  card: Card;
+  labels: Array<Label>;
+  checklistItems: Array<ChecklistItem>;
+  activities: Array<CardActivityWithAuthor>;
+  assignee: Profile | null;
+};
 
 export const createCardFunc = createServerFn({ method: 'POST' })
   .inputValidator(createCardValidator)
@@ -178,4 +193,159 @@ export const getArchivedCardsFunc = createServerFn({ method: 'GET' })
     }
 
     return cards;
+  });
+
+export const getCardFunc = createServerFn({ method: 'GET' })
+  .inputValidator(cardIdValidator)
+  .handler(async ({ data }): Promise<CardDetail> => {
+    const supabase = getSupabaseServerClient();
+    await requireUser(supabase);
+
+    const { data: card, error } = await supabase
+      .from('cards')
+      .select()
+      .eq('id', data.cardId)
+      .single();
+
+    if (error != null) {
+      setResponseStatus(404);
+      throw error;
+    }
+
+    const [labelsResult, checklistResult, activitiesResult] = await Promise.all([
+      supabase.from('card_labels').select('labels(*)').eq('card', data.cardId),
+      supabase
+        .from('check_list_items')
+        .select()
+        .eq('card', data.cardId)
+        .order('position', { ascending: true, nullsFirst: false }),
+      supabase
+        .from('card_activities')
+        .select()
+        .eq('card', data.cardId)
+        .order('created_at', { ascending: false })
+    ]);
+
+    const labels = (labelsResult.data ?? [])
+      .map((row): Label | null => row.labels)
+      .filter((label): label is Label => label != null);
+    const checklistItems = checklistResult.data ?? [];
+    const activities = activitiesResult.data ?? [];
+
+    // card_activities.user_id and cards.assignee both reference auth.users, but
+    // profiles has no PostgREST FK to them — resolve names in one profiles query.
+    const userIds = new Set<string>();
+    if (card.assignee != null) userIds.add(card.assignee);
+    for (const activity of activities) {
+      if (activity.user_id != null) userIds.add(activity.user_id);
+    }
+
+    const profilesById = new Map<string, Profile>();
+    if (userIds.size > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select()
+        .in('user_id', [...userIds]);
+
+      for (const profile of profiles ?? []) {
+        profilesById.set(profile.user_id, profile);
+      }
+    }
+
+    return {
+      card,
+      labels,
+      checklistItems,
+      activities: activities.map((activity): CardActivityWithAuthor => ({
+        ...activity,
+        author: activity.user_id != null ? profilesById.get(activity.user_id) ?? null : null
+      })),
+      assignee: card.assignee != null ? profilesById.get(card.assignee) ?? null : null
+    };
+  });
+
+export const updateCardDetailsFunc = createServerFn({ method: 'POST' })
+  .inputValidator(updateCardDetailsValidator)
+  .handler(async ({ data }): Promise<Card> => {
+    const supabase = getSupabaseServerClient();
+    const user = await requireUser(supabase);
+
+    const { data: existing, error: existingError } = await supabase
+      .from('cards')
+      .select('description, color, due_date, reminder_date')
+      .eq('id', data.cardId)
+      .single();
+
+    if (existingError != null) {
+      setResponseStatus(404);
+      throw existingError;
+    }
+
+    const { data: cards, error } = await supabase
+      .from('cards')
+      .update({
+        description: data.description,
+        color: data.color,
+        due_date: data.dueDate,
+        reminder_date: data.reminderDate,
+        updated: new Date().toISOString()
+      })
+      .eq('id', data.cardId)
+      .select();
+
+    if (error != null) {
+      setResponseStatus(400);
+      throw error;
+    }
+
+    if (cards.length === 0) {
+      setResponseStatus(403);
+      throw new Error('You do not have permission to update this card');
+    }
+
+    if (existing.description !== data.description) {
+      await logActivity(supabase, data.cardId, user.id, 'updated the description');
+    }
+    if (existing.due_date !== data.dueDate) {
+      await logActivity(
+        supabase,
+        data.cardId,
+        user.id,
+        data.dueDate != null ? 'set the due date' : 'removed the due date'
+      );
+    }
+
+    return cards[0];
+  });
+
+export const setCardAssigneeFunc = createServerFn({ method: 'POST' })
+  .inputValidator(setCardAssigneeValidator)
+  .handler(async ({ data }): Promise<Card> => {
+    const supabase = getSupabaseServerClient();
+    const user = await requireUser(supabase);
+
+    const { data: cards, error } = await supabase
+      .from('cards')
+      .update({ assignee: data.assignee, updated: new Date().toISOString() })
+      .eq('id', data.cardId)
+      .select();
+
+    if (error != null) {
+      setResponseStatus(400);
+      throw error;
+    }
+
+    if (cards.length === 0) {
+      setResponseStatus(403);
+      throw new Error('You do not have permission to update this card');
+    }
+
+    await logActivity(
+      supabase,
+      data.cardId,
+      user.id,
+      data.assignee != null ? 'changed the assignee' : 'removed the assignee'
+    );
+
+    return cards[0];
   });

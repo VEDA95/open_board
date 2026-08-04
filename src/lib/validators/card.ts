@@ -24,3 +24,16 @@ export const setCardActiveValidator = z.object({
 export const cardIdValidator = z.object({
   cardId: z.uuid()
 });
+
+export const updateCardDetailsValidator = z.object({
+  cardId: z.uuid(),
+  description: z.string().max(5000).nullable(),
+  color: z.string().max(20).nullable(),
+  dueDate: z.string().nullable(),
+  reminderDate: z.string().nullable()
+});
+
+export const setCardAssigneeValidator = z.object({
+  cardId: z.uuid(),
+  assignee: z.uuid().nullable()
+});

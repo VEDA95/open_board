@@ -17,8 +17,7 @@ import {
   setCardActiveFunc
 } from '@lib/server-functions/cards';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
-import type { BoardDetail } from '@lib/server-functions/boards';
-import type { Card } from '@lib/server-functions/cards';
+import type { BoardCard, BoardDetail } from '@lib/server-functions/boards';
 
 export const boardQueryOptions = (boardId: string) =>
   queryOptions({
@@ -74,7 +73,7 @@ export function useBoardMutations(boardId: string): {
 
         return {
           ...current,
-          cards: current.cards.map((card): Card =>
+          cards: current.cards.map((card): BoardCard =>
             card.id === data.cardId
               ? { ...card, list: data.listId, position: data.position }
               : card

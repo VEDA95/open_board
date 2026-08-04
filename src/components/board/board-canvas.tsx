@@ -9,17 +9,18 @@ import { positionBetween } from '@lib/utils/position';
 import type { FC, ReactElement, ReactNode } from 'react';
 import type { KanbanCommitMeta } from '@components/reui/kanban';
 import type { List } from '@lib/server-functions/lists';
-import type { Card } from '@lib/server-functions/cards';
+import type { BoardCard } from '@lib/server-functions/boards';
 
 type BoardCanvasProps = {
+  workspaceId: string;
   boardId: string;
   lists: Array<List>;
-  cards: Array<Card>;
+  cards: Array<BoardCard>;
 };
 
-type Columns = Record<string, Array<Card>>;
+type Columns = Record<string, Array<BoardCard>>;
 
-function buildColumns(lists: Array<List>, cards: Array<Card>): Columns {
+function buildColumns(lists: Array<List>, cards: Array<BoardCard>): Columns {
   const columns: Columns = {};
 
   for (const list of lists) {
@@ -46,12 +47,23 @@ function buildColumns(lists: Array<List>, cards: Array<Card>): Columns {
 function signature(columns: Columns): string {
   return Object.entries(columns)
     .map(([listId, cards]): string =>
-      `${listId}:${cards.map((card): string => `${card.id}~${card.name}~${card.is_active}`).join(',')}`
+      `${listId}:${cards
+        .map((card): string =>
+          [
+            card.id,
+            card.name,
+            card.is_active,
+            card.due_date,
+            card.assignee,
+            card.labels.map((label): string => label.id).join('+')
+          ].join('~')
+        )
+        .join(',')}`
     )
     .join('|');
 }
 
-export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactElement<FC> {
+export function BoardCanvas({ workspaceId, boardId, lists, cards }: BoardCanvasProps): ReactElement<FC> {
   const mutations = useBoardMutations(boardId);
   const serverColumns = useMemo((): Columns => buildColumns(lists, cards), [lists, cards]);
   const serverSignature = useMemo((): string => signature(serverColumns), [serverColumns]);
@@ -62,7 +74,7 @@ export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactE
   const listsById = useMemo(() => new Map(lists.map((list) => [list.id, list])), [lists]);
   const [renameList, setRenameList] = useState<List | null>(null);
   const [deleteList, setDeleteList] = useState<List | null>(null);
-  const [renameCard, setRenameCard] = useState<Card | null>(null);
+  const [renameCard, setRenameCard] = useState<BoardCard | null>(null);
 
   // Adopt server data only when it genuinely differs from what's displayed.
   // This is what makes drops flicker-free: after a move the optimistic cache
@@ -74,7 +86,7 @@ export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactE
     );
   }, [serverSignature, serverColumns]);
 
-  const handleCommit = (value: Columns, meta: KanbanCommitMeta<Card>): void => {
+  const handleCommit = (value: Columns, meta: KanbanCommitMeta<BoardCard>): void => {
     if (meta.kind === 'column') {
       const keys = Object.keys(value);
       const index = keys.indexOf(meta.activeContainer);
@@ -115,7 +127,7 @@ export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactE
       <Kanban
         value={columns}
         onValueChange={setColumns}
-        getItemValue={(card: Card): string => card.id}
+        getItemValue={(card: BoardCard): string => card.id}
         onValueCommit={handleCommit}
         className="h-full"
       >
@@ -128,6 +140,8 @@ export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactE
             return (
               <ListColumn
                 key={listId}
+                workspaceId={workspaceId}
+                boardId={boardId}
                 list={list}
                 cards={columns[listId]}
                 addCardPending={mutations.createCard.isPending}
@@ -137,7 +151,7 @@ export function BoardCanvas({ boardId, lists, cards }: BoardCanvasProps): ReactE
                 onRenameList={setRenameList}
                 onDeleteList={setDeleteList}
                 onRenameCard={setRenameCard}
-                onArchiveCard={(card: Card): void => {
+                onArchiveCard={(card: BoardCard): void => {
                   mutations.setCardActive.mutate({ data: { cardId: card.id, isActive: false } });
                 }}
               />

@@ -18,9 +18,11 @@ import {
 } from '@components/ui/dropdown-menu';
 import type { FC, ReactElement } from 'react';
 import type { List } from '@lib/server-functions/lists';
-import type { Card as CardType } from '@lib/server-functions/cards';
+import type { BoardCard as CardType } from '@lib/server-functions/boards';
 
 type ListColumnProps = {
+  workspaceId: string;
+  boardId: string;
   list: List;
   cards: Array<CardType>;
   addCardPending?: boolean;
@@ -32,6 +34,8 @@ type ListColumnProps = {
 };
 
 export function ListColumn({
+  workspaceId,
+  boardId,
   list,
   cards,
   addCardPending = false,
@@ -80,6 +84,8 @@ export function ListColumn({
             {cards.map((card): ReactElement<FC> => (
               <CardItem
                 key={card.id}
+                workspaceId={workspaceId}
+                boardId={boardId}
                 card={card}
                 onRename={onRenameCard}
                 onArchive={onArchiveCard}

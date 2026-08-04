@@ -9,13 +9,19 @@ import {
 } from '@lib/validators/board';
 import type { Tables } from '@lib/types/supabase';
 import type { List } from '@lib/server-functions/lists';
-import type { Card } from '@lib/server-functions/cards';
+import type { Card, Profile } from '@lib/server-functions/cards';
+import type { Label } from '@lib/server-functions/labels';
 
 export type Board = Tables<'boards'>;
+// Card enriched with the bits its face shows on the board.
+export type BoardCard = Card & {
+  labels: Array<Label>;
+  assigneeProfile: Profile | null;
+};
 export type BoardDetail = {
   board: Board;
   lists: Array<List>;
-  cards: Array<Card>;
+  cards: Array<BoardCard>;
 };
 
 export const getBoardFunc = createServerFn({ method: 'GET' })
@@ -34,7 +40,7 @@ export const getBoardFunc = createServerFn({ method: 'GET' })
         .order('position', { ascending: true, nullsFirst: false }),
       supabase
         .from('cards')
-        .select('*, lists!inner(board)')
+        .select('*, lists!inner(board), card_labels(labels(*))')
         .eq('lists.board', data.boardId)
         .eq('is_active', true)
         .order('position', { ascending: true, nullsFirst: false })
@@ -55,10 +61,37 @@ export const getBoardFunc = createServerFn({ method: 'GET' })
       throw cardsResult.error;
     }
 
+    // Resolve assignee display names in one query (profiles has no PostgREST FK
+    // to auth.users, so it can't be embedded above).
+    const assigneeIds = [
+      ...new Set(
+        cardsResult.data
+          .map((card): string | null => card.assignee)
+          .filter((id): id is string => id != null)
+      )
+    ];
+    const profilesById = new Map<string, Profile>();
+    if (assigneeIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select()
+        .in('user_id', assigneeIds);
+
+      for (const profile of profiles ?? []) {
+        profilesById.set(profile.user_id, profile);
+      }
+    }
+
     return {
       board: boardResult.data,
       lists: listsResult.data,
-      cards: cardsResult.data.map(({ lists: _lists, ...card }): Card => card)
+      cards: cardsResult.data.map(({ lists: _lists, card_labels, ...card }): BoardCard => ({
+        ...card,
+        labels: card_labels
+          .map((row): Label | null => row.labels)
+          .filter((label): label is Label => label != null),
+        assigneeProfile: card.assignee != null ? profilesById.get(card.assignee) ?? null : null
+      }))
     };
   });
 

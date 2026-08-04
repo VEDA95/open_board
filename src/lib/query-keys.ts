@@ -6,5 +6,7 @@ export const queryKeys = {
   board: (boardId: string) => ['board', boardId] as const,
   card: (cardId: string) => ['card', cardId] as const,
   comments: (cardId: string) => ['comments', cardId] as const,
+  labels: (boardId: string) => ['labels', boardId] as const,
+  profiles: ['profiles'] as const,
   settings: ['settings'] as const,
 };
