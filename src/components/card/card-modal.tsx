@@ -6,6 +6,9 @@ import { AssigneePicker } from '@components/card/assignee-picker';
 import { DueDatePicker } from '@components/card/due-date-picker';
 import { Checklist } from '@components/card/checklist';
 import { ActivityFeed } from '@components/card/activity-feed';
+import { CommentsSection } from '@components/card/comments-section';
+import { AttachmentList } from '@components/card/attachment-list';
+import { AttachmentUpload } from '@components/card/attachment-upload';
 import { Textarea } from '@components/ui/textarea';
 import { Skeleton } from '@components/ui/skeleton';
 import type { FC, ReactElement } from 'react';
@@ -14,6 +17,7 @@ import type { CardDetail } from '@lib/server-functions/cards';
 type CardModalProps = {
   cardId: string;
   boardId: string;
+  currentUserId: string | null;
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }): ReactElement<FC> {
@@ -25,8 +29,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function CardModalContent({ cardId, boardId, detail }: CardModalProps & { detail: CardDetail }): ReactElement<FC> {
-  const { card, labels, checklistItems, activities, assignee } = detail;
+function CardModalContent({ cardId, boardId, currentUserId, detail }: CardModalProps & { detail: CardDetail }): ReactElement<FC> {
+  const { card, labels, checklistItems, activities, comments, attachments, assignee } = detail;
   const mutations = useCardMutations(cardId, boardId);
   const [description, setDescription] = useState(card.description ?? '');
   const assignedLabelIds = labels.map((label): string => label.id);
@@ -127,6 +131,28 @@ function CardModalContent({ cardId, boardId, detail }: CardModalProps & { detail
         />
       </Section>
 
+      <Section title="Attachments">
+        <AttachmentUpload uploading={mutations.isUploading} onUpload={mutations.uploadAttachment} />
+        <AttachmentList
+          attachments={attachments}
+          disabled={mutations.isUploading}
+          onDelete={mutations.deleteAttachment}
+        />
+      </Section>
+
+      <Section title="Comments">
+        <CommentsSection
+          comments={comments}
+          currentUserId={currentUserId}
+          disabled={mutations.isSavingComment}
+          uploading={mutations.isUploading}
+          onAdd={mutations.addComment}
+          onDelete={mutations.deleteComment}
+          onUploadAttachment={mutations.uploadCommentAttachment}
+          onDeleteAttachment={mutations.deleteCommentAttachment}
+        />
+      </Section>
+
       <Section title="Activity">
         <ActivityFeed activities={activities} />
       </Section>
@@ -134,7 +160,7 @@ function CardModalContent({ cardId, boardId, detail }: CardModalProps & { detail
   );
 }
 
-export function CardModal({ cardId, boardId }: CardModalProps): ReactElement<FC> {
+export function CardModal({ cardId, boardId, currentUserId }: CardModalProps): ReactElement<FC> {
   const cardQuery = useCard(cardId);
 
   if (cardQuery.isPending) {
@@ -151,5 +177,12 @@ export function CardModal({ cardId, boardId }: CardModalProps): ReactElement<FC>
     return <p className="text-muted-foreground text-sm">This card could not be loaded.</p>;
   }
 
-  return <CardModalContent cardId={cardId} boardId={boardId} detail={cardQuery.data} />;
+  return (
+    <CardModalContent
+      cardId={cardId}
+      boardId={boardId}
+      currentUserId={currentUserId}
+      detail={cardQuery.data}
+    />
+  );
 }

@@ -684,6 +684,27 @@ export type Database = {
       check_workspace_permissions:
         | { Args: never; Returns: boolean }
         | { Args: { workspace_id: string }; Returns: boolean }
+      get_card_attachments: {
+        Args: { card_id: string }
+        Returns: {
+          file: string
+          mime_type: string
+          object_name: string
+          size: number
+          uploaded_at: string
+        }[]
+      }
+      get_comment_attachments: {
+        Args: { card_id: string }
+        Returns: {
+          comment: string
+          file: string
+          mime_type: string
+          object_name: string
+          size: number
+          uploaded_at: string
+        }[]
+      }
       get_user_permission_ids: { Args: never; Returns: string[] }
       get_user_permission_paths: { Args: never; Returns: string[] }
       rebalance_card_positions: {

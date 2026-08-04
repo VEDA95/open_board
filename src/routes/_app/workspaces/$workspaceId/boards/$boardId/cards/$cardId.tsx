@@ -11,6 +11,7 @@ import type { FC, ReactElement } from 'react';
 
 function CardModalRoute(): ReactElement<FC> {
   const { workspaceId, boardId, cardId } = Route.useParams();
+  const { user } = Route.useRouteContext();
   const navigate = useNavigate();
 
   const close = (): void => {
@@ -31,7 +32,7 @@ function CardModalRoute(): ReactElement<FC> {
         <DialogHeader className="sr-only">
           <DialogTitle>Card details</DialogTitle>
         </DialogHeader>
-        <CardModal cardId={cardId} boardId={boardId} />
+        <CardModal cardId={cardId} boardId={boardId} currentUserId={user?.id ?? null} />
       </DialogContent>
     </Dialog>
   );

@@ -13,6 +13,17 @@ import {
   toggleChecklistItemFunc
 } from '@lib/server-functions/checklists';
 import { addCardLabelFunc, removeCardLabelFunc } from '@lib/server-functions/labels';
+import {
+  addCommentFunc,
+  deleteCommentFunc,
+  updateCommentFunc
+} from '@lib/server-functions/comments';
+import {
+  deleteCardAttachmentFunc,
+  deleteCommentAttachmentFunc,
+  uploadCardAttachmentFunc,
+  uploadCommentAttachmentFunc
+} from '@lib/server-functions/attachments';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import type { Card, CardDetail } from '@lib/server-functions/cards';
 
@@ -41,8 +52,17 @@ export function useCardMutations(cardId: string, boardId: string): {
   toggleChecklistItem: (itemId: string, isChecked: boolean) => void;
   renameChecklistItem: (itemId: string, name: string) => void;
   deleteChecklistItem: (itemId: string) => void;
+  addComment: (comment: string) => void;
+  updateComment: (commentId: string, comment: string) => void;
+  deleteComment: (commentId: string) => void;
+  uploadAttachment: (file: File) => void;
+  deleteAttachment: (file: string) => void;
+  uploadCommentAttachment: (commentId: string, file: File) => void;
+  deleteCommentAttachment: (commentId: string, file: string) => void;
   isSavingLabel: boolean;
   isSavingChecklist: boolean;
+  isSavingComment: boolean;
+  isUploading: boolean;
 } {
   const queryClient = useQueryClient();
   const invalidate = (): void => {
@@ -93,6 +113,29 @@ export function useCardMutations(cardId: string, boardId: string): {
     onSuccess: invalidate,
     onError
   });
+  const addComment = useMutation({ mutationFn: addCommentFunc, onSuccess: invalidate, onError });
+  const updateComment = useMutation({ mutationFn: updateCommentFunc, onSuccess: invalidate, onError });
+  const deleteComment = useMutation({ mutationFn: deleteCommentFunc, onSuccess: invalidate, onError });
+  const uploadAttachment = useMutation({
+    mutationFn: uploadCardAttachmentFunc,
+    onSuccess: invalidate,
+    onError
+  });
+  const deleteAttachment = useMutation({
+    mutationFn: deleteCardAttachmentFunc,
+    onSuccess: invalidate,
+    onError
+  });
+  const uploadCommentAttachment = useMutation({
+    mutationFn: uploadCommentAttachmentFunc,
+    onSuccess: invalidate,
+    onError
+  });
+  const deleteCommentAttachment = useMutation({
+    mutationFn: deleteCommentAttachmentFunc,
+    onSuccess: invalidate,
+    onError
+  });
 
   return {
     updateDetails,
@@ -105,11 +148,32 @@ export function useCardMutations(cardId: string, boardId: string): {
     renameChecklistItem: (itemId: string, name: string): void =>
       renameChecklistItem.mutate({ data: { itemId, name } }),
     deleteChecklistItem: (itemId: string): void => deleteChecklistItem.mutate({ data: { itemId } }),
+    addComment: (comment: string): void => addComment.mutate({ data: { cardId, comment } }),
+    updateComment: (commentId: string, comment: string): void =>
+      updateComment.mutate({ data: { commentId, comment } }),
+    deleteComment: (commentId: string): void => deleteComment.mutate({ data: { commentId } }),
+    uploadAttachment: (file: File): void => {
+      const formData = new FormData();
+      formData.append('cardId', cardId);
+      formData.append('file', file);
+      uploadAttachment.mutate({ data: formData });
+    },
+    deleteAttachment: (file: string): void => deleteAttachment.mutate({ data: { cardId, file } }),
+    uploadCommentAttachment: (commentId: string, file: File): void => {
+      const formData = new FormData();
+      formData.append('commentId', commentId);
+      formData.append('file', file);
+      uploadCommentAttachment.mutate({ data: formData });
+    },
+    deleteCommentAttachment: (commentId: string, file: string): void =>
+      deleteCommentAttachment.mutate({ data: { cardId, commentId, file } }),
     isSavingLabel: addLabel.isPending || removeLabel.isPending,
     isSavingChecklist:
       addChecklistItem.isPending ||
       toggleChecklistItem.isPending ||
       renameChecklistItem.isPending ||
-      deleteChecklistItem.isPending
+      deleteChecklistItem.isPending,
+    isSavingComment: addComment.isPending || updateComment.isPending || deleteComment.isPending,
+    isUploading: uploadAttachment.isPending || uploadCommentAttachment.isPending
   };
 }

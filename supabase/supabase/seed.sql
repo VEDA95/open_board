@@ -35,10 +35,12 @@ INSERT INTO "public"."permissions" ("id", "path") VALUES
 	('66ab20b1-974a-4954-b200-fe17271b5bd3', 'board:delete'),
 	('45174565-2013-453b-9f7e-cbd88b5677f6', 'board:manage');
 
+-- Attachment buckets are private: files are reached only through server-issued
+-- signed URLs. thumbnails stays public (avatars are shown by public URL).
 INSERT INTO "storage"."buckets" ("id", "name", "owner", "created_at", "updated_at", "public", "avif_autodetection", "file_size_limit", "allowed_mime_types", "owner_id", "type") VALUES
 	('thumbnails', 'thumbnails', NULL, '2026-04-08 04:53:17.933214+00', '2026-04-08 04:53:17.933214+00', true, false, NULL, NULL, NULL, 'STANDARD'),
-	('card_attachments', 'card_attachments', NULL, '2026-04-08 04:54:51.450636+00', '2026-04-08 04:54:51.450636+00', true, false, NULL, NULL, NULL, 'STANDARD'),
-	('comment_attachments', 'comment_attachments', NULL, '2026-04-08 04:55:04.911947+00', '2026-04-08 04:55:04.911947+00', true, false, NULL, NULL, NULL, 'STANDARD');
+	('card_attachments', 'card_attachments', NULL, '2026-04-08 04:54:51.450636+00', '2026-04-08 04:54:51.450636+00', false, false, NULL, NULL, NULL, 'STANDARD'),
+	('comment_attachments', 'comment_attachments', NULL, '2026-04-08 04:55:04.911947+00', '2026-04-08 04:55:04.911947+00', false, false, NULL, NULL, NULL, 'STANDARD');
 
 INSERT INTO "public"."roles" ("id", "name") VALUES
 	('dbeb55a3-4f17-48f9-b099-d4818fb4d528', 'superuser'),

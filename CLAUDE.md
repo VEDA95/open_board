@@ -83,6 +83,14 @@ Schema lives in `supabase/supabase/migrations/`. Core kanban tables (`workspaces
 - **Card modal is a child route**: `boards/$boardId/route.tsx` is a layout (board header + `BoardCanvas` + `<Outlet/>`); `cards/$cardId.tsx` renders a `Dialog` into that Outlet (deep-linkable, board stays mounted underneath). It has its own `['card', id]` query (`getCardFunc` → card + assigned labels + checklist + activities + assignee profile). Card mutations invalidate both `['card', id]` and `['board', id]`.
 - **Activity log**: mutating server functions call `logActivity(supabase, cardId, userId, text)` (best-effort; the `card_activities` insert policy requires `user_id = auth.uid()`). Profiles for authors/assignees are resolved with a separate `profiles` query — there's no PostgREST FK from `card_activities`/`cards` to `profiles`.
 
+### Comments & attachments (Phase 4)
+
+- **Comments** are plain text (`comments` table, RLS: read via `check_card_access`, write/edit/delete your own). They come back on the `['card', id]` query (`getCardFunc`) with author profiles resolved the same way activities are; adding one logs a `card_activities` row.
+- **Attachment buckets are private** (`card_attachments`, `comment_attachments`; `thumbnails` stays public — set in `seed.sql`, since seed runs after migrations and is the effective source for the `public` flag locally). Files are reached only through **server-issued signed URLs** (~1h TTL), generated with the service-role client in `getCardFunc` after access was already gated by the RLS-scoped fetch.
+- **Upload path is `{auth.uid()}/{uuid}/{filename}`** — the storage insert policy requires the first path segment to equal the user's id; the uuid folder keeps the display filename clean (`name.split('/').pop()`). Uploads go through a server function that takes `FormData` (validated for size ≤ 10MB and an allow-listed MIME in `validators/comment.ts`), then links the returned `storage.objects.id` into `card_attachments`; a failed junction insert removes the orphaned object.
+- **The `storage` schema is NOT exposed to PostgREST** (`[api] schemas` is `public, graphql_public`), so the app can't query `storage.objects` as a table. `public.get_card_attachments(card_id)` / `public.get_comment_attachments(card_id)` (SECURITY DEFINER, `check_card_access`-gated) return each attachment's object path + size/mime; Storage API calls (`createSignedUrl`, `remove`) then work by path regardless of schema exposure.
+- **Comment attachments** work the same way, into the `comment_attachments` bucket, but scoped to a single comment: the junction insert policy only lets the comment's own author attach (`comment_attachments_insert` checks `c.user_id = auth.uid()`). `getCardFunc` fetches them via `get_comment_attachments`, signs each, and groups them onto their parent comment (`CommentWithAuthor.attachments`); the comments UI shows an attach button only on your own comments.
+
 ### Path aliases (tsconfig)
 
 - `@/*` → `src/*`

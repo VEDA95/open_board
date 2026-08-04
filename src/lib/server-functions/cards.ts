@@ -13,22 +13,42 @@ import {
   setCardAssigneeValidator,
   updateCardDetailsValidator
 } from '@lib/validators/card';
+import { getSupabaseAdminClient } from '@lib/utils/supabase-admin';
 import { boardIdValidator } from '@lib/validators/board';
 import type { Tables } from '@lib/types/supabase';
 import type { Label } from '@lib/server-functions/labels';
 import type { ChecklistItem } from '@lib/server-functions/checklists';
+import type { Comment } from '@lib/server-functions/comments';
 
 export type Card = Tables<'cards'>;
 export type Profile = Tables<'profiles'>;
 export type CardActivity = Tables<'card_activities'>;
 export type CardActivityWithAuthor = CardActivity & { author: Profile | null };
+export type CardAttachment = {
+  file: string;
+  name: string;
+  size: number | null;
+  mimeType: string | null;
+  url: string | null;
+};
+export type CommentWithAuthor = Comment & {
+  author: Profile | null;
+  attachments: Array<CardAttachment>;
+};
+
+const COMMENT_ATTACHMENTS_BUCKET = 'comment_attachments';
 export type CardDetail = {
   card: Card;
   labels: Array<Label>;
   checklistItems: Array<ChecklistItem>;
   activities: Array<CardActivityWithAuthor>;
+  comments: Array<CommentWithAuthor>;
+  attachments: Array<CardAttachment>;
   assignee: Profile | null;
 };
+
+const ATTACHMENTS_BUCKET = 'card_attachments';
+const SIGNED_URL_TTL_SECONDS = 3600;
 
 export const createCardFunc = createServerFn({ method: 'POST' })
   .inputValidator(createCardValidator)
@@ -212,7 +232,7 @@ export const getCardFunc = createServerFn({ method: 'GET' })
       throw error;
     }
 
-    const [labelsResult, checklistResult, activitiesResult] = await Promise.all([
+    const [labelsResult, checklistResult, activitiesResult, commentsResult, attachmentsResult, commentAttachmentsResult] = await Promise.all([
       supabase.from('card_labels').select('labels(*)').eq('card', data.cardId),
       supabase
         .from('check_list_items')
@@ -223,7 +243,14 @@ export const getCardFunc = createServerFn({ method: 'GET' })
         .from('card_activities')
         .select()
         .eq('card', data.cardId)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('comments')
+        .select()
+        .eq('card', data.cardId)
+        .order('created_at', { ascending: true }),
+      supabase.rpc('get_card_attachments', { card_id: data.cardId }),
+      supabase.rpc('get_comment_attachments', { card_id: data.cardId })
     ]);
 
     const labels = (labelsResult.data ?? [])
@@ -231,13 +258,18 @@ export const getCardFunc = createServerFn({ method: 'GET' })
       .filter((label): label is Label => label != null);
     const checklistItems = checklistResult.data ?? [];
     const activities = activitiesResult.data ?? [];
+    const comments = commentsResult.data ?? [];
 
-    // card_activities.user_id and cards.assignee both reference auth.users, but
-    // profiles has no PostgREST FK to them — resolve names in one profiles query.
+    // card_activities.user_id, comments.user_id and cards.assignee all reference
+    // auth.users, but profiles has no PostgREST FK to them — resolve every name
+    // in one profiles query.
     const userIds = new Set<string>();
     if (card.assignee != null) userIds.add(card.assignee);
     for (const activity of activities) {
       if (activity.user_id != null) userIds.add(activity.user_id);
+    }
+    for (const comment of comments) {
+      if (comment.user_id != null) userIds.add(comment.user_id);
     }
 
     const profilesById = new Map<string, Profile>();
@@ -252,6 +284,45 @@ export const getCardFunc = createServerFn({ method: 'GET' })
       }
     }
 
+    // Sign each attachment's object with the service-role client (the buckets
+    // are private). Access was already gated by the get_*_attachments functions'
+    // check_card_access.
+    const adminClient = getSupabaseAdminClient();
+    const signAttachment = async (
+      bucket: string,
+      row: { file: string; object_name: string; size: number | null; mime_type: string | null }
+    ): Promise<CardAttachment> => {
+      const { data: signed } = await adminClient.storage
+        .from(bucket)
+        .createSignedUrl(row.object_name, SIGNED_URL_TTL_SECONDS);
+
+      return {
+        file: row.file,
+        name: row.object_name.split('/').pop() ?? row.object_name,
+        size: row.size,
+        mimeType: row.mime_type,
+        url: signed?.signedUrl ?? null
+      };
+    };
+
+    const attachments = await Promise.all(
+      (attachmentsResult.data ?? []).map((row): Promise<CardAttachment> =>
+        signAttachment(ATTACHMENTS_BUCKET, row)
+      )
+    );
+
+    // Group comment attachments by their parent comment.
+    const commentAttachments = new Map<string, Array<CardAttachment>>();
+    await Promise.all(
+      (commentAttachmentsResult.data ?? []).map(async (row): Promise<void> => {
+        const signed = await signAttachment(COMMENT_ATTACHMENTS_BUCKET, row);
+        const existing = commentAttachments.get(row.comment) ?? [];
+
+        existing.push(signed);
+        commentAttachments.set(row.comment, existing);
+      })
+    );
+
     return {
       card,
       labels,
@@ -260,6 +331,12 @@ export const getCardFunc = createServerFn({ method: 'GET' })
         ...activity,
         author: activity.user_id != null ? profilesById.get(activity.user_id) ?? null : null
       })),
+      comments: comments.map((comment): CommentWithAuthor => ({
+        ...comment,
+        author: comment.user_id != null ? profilesById.get(comment.user_id) ?? null : null,
+        attachments: commentAttachments.get(comment.id) ?? []
+      })),
+      attachments,
       assignee: card.assignee != null ? profilesById.get(card.assignee) ?? null : null
     };
   });
