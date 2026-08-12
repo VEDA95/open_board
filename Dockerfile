@@ -1,7 +1,10 @@
 FROM node:26-alpine AS builder
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME/bin:$PATH"
+RUN npm install -g pnpm@latest
 WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml  ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 COPY . .
 RUN pnpm build
 

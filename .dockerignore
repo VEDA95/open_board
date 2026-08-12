@@ -7,10 +7,6 @@
 .env
 node_modules/
 supabase/
-src/
 CLAUDE.md
 README.md
 components.json
-eslint.config.js
-tsconfig.json
-vite.config.ts
