@@ -1,7 +1,8 @@
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute, redirect } from '@tanstack/react-router';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from '@tanstack/react-form-start';
 import { registerFunc } from '@lib/server-functions/auth';
+import {getAuthSettingsFunc} from '@lib/server-functions/settings';
 import { registerValidator } from '@lib/validators/auth';
 import { Button } from '@components/ui/button';
 import {
@@ -19,6 +20,7 @@ import {
 } from '@components/ui/field';
 import { Input } from '@components/ui/input';
 import type { ChangeEvent, FC, ReactElement, SyntheticEvent } from 'react';
+import type {AuthSettings} from '@lib/server-functions/settings';
 
 function RegisterPage(): ReactElement<FC> {
   const registerMutation = useMutation({ mutationFn: registerFunc });
@@ -187,4 +189,11 @@ function RegisterPage(): ReactElement<FC> {
   );
 }
 
-export const Route = createFileRoute('/auth/register')({ component: RegisterPage });
+export const Route = createFileRoute('/auth/register')({
+  beforeLoad: async (): Promise<void> => {
+    const authSettings: AuthSettings = await getAuthSettingsFunc();
+
+    if(!authSettings.enable_registration) throw redirect({to: '/'});
+  },
+  component: RegisterPage 
+});

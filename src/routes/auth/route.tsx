@@ -26,9 +26,7 @@ export const Route = createFileRoute('/auth')({
       location.pathname.startsWith('/auth/reset-password') ||
       location.pathname.startsWith('/auth/accept-invite');
 
-    if (context.user != null && !midFlow) {
-      throw redirect({ to: '/' });
-    }
+    if (context.user != null && !midFlow) throw redirect({ to: '/' });
   },
   component: AuthLayout,
 });

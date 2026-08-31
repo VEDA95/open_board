@@ -2,6 +2,7 @@ import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
 import { useMutation } from '@tanstack/react-query';
 import {useForm} from '@tanstack/react-form-start';
 import { loginFunc } from '@lib/server-functions/auth';
+import {useAuthSettings} from '@lib/hooks/use-app-settings';
 import {loginValidator} from '@lib/validators/auth';
 import { Button } from '@components/ui/button';
 import {
@@ -22,6 +23,7 @@ import type { ChangeEvent, FC, ReactElement, SyntheticEvent } from 'react';
 import type {ErrorResponse} from '@lib/types/error';
 
 function LoginPage(): ReactElement<FC> {
+  const authSettings = useAuthSettings();
   const router = useRouter();
   const loginMutation = useMutation({
     mutationFn: loginFunc,
@@ -105,9 +107,11 @@ function LoginPage(): ReactElement<FC> {
               children={([canSubmit, isSubmitting]): ReactElement<FC> => (
                 <Field>
                   <Button type="submit" disabled={!canSubmit || isSubmitting}>Login</Button>
-                  <FieldDescription className="text-center">
-                    Don&apos;t have an account? <Link to="/auth/register">Sign up</Link>
-                  </FieldDescription>
+                  {authSettings.data?.enable_registration && (
+                    <FieldDescription className="text-center">
+                      Don&apos;t have an account? <Link to="/auth/register">Sign up</Link>
+                    </FieldDescription>
+                  )}
                 </Field>
               )}
             />

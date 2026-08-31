@@ -5,6 +5,7 @@ import { requireUser } from '@lib/utils/permissions';
 import type { Tables } from '@lib/types/supabase';
 
 export type AppSettings = Tables<'general_settings'>;
+export type AuthSettings = Tables<'auth_settings'>;
 
 // App-wide settings readable by any signed-in user (general_settings select is
 // open). Used for the announcement banner and app name in the shell — distinct
@@ -16,6 +17,24 @@ export const getAppSettingsFunc = createServerFn({ method: 'GET' })
 
     const { data, error } = await supabase
       .from('general_settings')
+      .select()
+      .eq('id', 1)
+      .single();
+
+    if (error != null) {
+      setResponseStatus(400);
+      throw error;
+    }
+
+    return data;
+  });
+
+export const getAuthSettingsFunc = createServerFn({ method: 'GET' })
+  .handler(async (): Promise<AuthSettings> => {
+    const supabase = getSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from('auth_settings')
       .select()
       .eq('id', 1)
       .single();
