@@ -3,6 +3,7 @@ import { setResponseStatus } from '@tanstack/react-start/server';
 import { getSupabaseServerClient } from '@lib/utils/supabase';
 import { getSupabaseAdminClient } from '@lib/utils/supabase-admin';
 import {
+  acceptInviteValidator,
   exchangeCodeValidator,
   forgotPasswordValidator,
   loginValidator,
@@ -131,4 +132,36 @@ export const resetPasswordFunc = createServerFn({ method: 'POST' })
 
     setResponseStatus(400);
     throw error;
+  });
+
+// Invited users land here already signed in (their invite code was exchanged
+// for a session in the route's beforeLoad). They set their password and pick a
+// username to finish setting up the account.
+export const acceptInviteFunc = createServerFn({ method: 'POST' })
+  .inputValidator(acceptInviteValidator)
+  .handler(async ({ data }): Promise<void> => {
+    const supabase = getSupabaseServerClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError != null || user == null) {
+      setResponseStatus(401);
+      throw userError ?? new Error('Your invite session has expired');
+    }
+
+    const { error }: UserResponse = await supabase.auth.updateUser({ password: data.password });
+
+    if (error != null) {
+      setResponseStatus(400);
+      throw error;
+    }
+
+    const { error: profileError }: PostgrestSingleResponse<null> = await supabase
+      .from('profiles')
+      .update({ username: data.username })
+      .eq('user_id', user.id);
+
+    if (profileError == null) return;
+
+    setResponseStatus(profileError.code === '23505' ? 409 : 400);
+    throw new Error(profileError.code === '23505' ? 'That username is already taken' : profileError.message);
   });

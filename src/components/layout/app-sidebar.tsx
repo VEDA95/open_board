@@ -1,11 +1,12 @@
 import { Link, useParams, useRouter } from '@tanstack/react-router';
 import { useMutation } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Folder01Icon, KanbanIcon, Logout01Icon, UnfoldMoreIcon, UserIcon } from '@hugeicons/core-free-icons';
+import { Folder01Icon, KanbanIcon, Logout01Icon, Settings02Icon, UnfoldMoreIcon, UserIcon } from '@hugeicons/core-free-icons';
 import { logoutFunc } from '@lib/server-functions/auth';
 import { useWorkspaces } from '@lib/hooks/use-workspaces';
 import { useMyProfile } from '@lib/hooks/use-profile';
 import { profileLabel } from '@lib/utils/format-date';
+import { canAccessAdmin } from '@lib/utils/has-permission';
 import { Avatar, AvatarFallback, AvatarImage } from '@components/ui/avatar';
 import {
   DropdownMenu,
@@ -34,9 +35,10 @@ import type { User } from '@supabase/supabase-js';
 
 type AppSidebarProps = {
   user: User;
+  permissions: Array<string>;
 };
 
-function NavUser({ user }: AppSidebarProps): ReactElement<FC> {
+function NavUser({ user }: { user: User }): ReactElement<FC> {
   const router = useRouter();
   const profileQuery = useMyProfile();
   const logoutMutation = useMutation({
@@ -85,9 +87,10 @@ function NavUser({ user }: AppSidebarProps): ReactElement<FC> {
   );
 }
 
-export function AppSidebar({ user }: AppSidebarProps): ReactElement<FC> {
+export function AppSidebar({ user, permissions }: AppSidebarProps): ReactElement<FC> {
   const workspacesQuery = useWorkspaces();
   const params = useParams({ strict: false });
+  const showAdmin = canAccessAdmin(permissions);
 
   return (
     <Sidebar>
@@ -117,6 +120,14 @@ export function AppSidebar({ user }: AppSidebarProps): ReactElement<FC> {
                   Workspaces
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              {showAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton render={<Link to="/admin/settings" />}>
+                    <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} className="size-4" />
+                    Administration
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -16,8 +16,15 @@ import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-passw
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
+import { Route as AuthAcceptInviteRouteImport } from './routes/auth/accept-invite'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
+import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppWorkspacesIndexRouteImport } from './routes/_app/workspaces/index'
+import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
+import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
+import { Route as AppAdminSettingsRouteImport } from './routes/_app/admin/settings'
+import { Route as AppAdminRolesRouteImport } from './routes/_app/admin/roles'
+import { Route as AppAdminPermissionsRouteImport } from './routes/_app/admin/permissions'
 import { Route as AppWorkspacesWorkspaceIdIndexRouteImport } from './routes/_app/workspaces/$workspaceId/index'
 import { Route as AppWorkspacesWorkspaceIdBoardsBoardIdRouteRouteImport } from './routes/_app/workspaces/$workspaceId/boards/$boardId/route'
 import { Route as AppWorkspacesWorkspaceIdBoardsBoardIdIndexRouteImport } from './routes/_app/workspaces/$workspaceId/boards/$boardId/index'
@@ -57,15 +64,50 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => AuthRouteRoute,
 } as any)
+const AuthAcceptInviteRoute = AuthAcceptInviteRouteImport.update({
+  id: '/accept-invite',
+  path: '/accept-invite',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppWorkspacesIndexRoute = AppWorkspacesIndexRouteImport.update({
   id: '/workspaces/',
   path: '/workspaces/',
   getParentRoute: () => AppRouteRoute,
+} as any)
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminSettingsRoute = AppAdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminPermissionsRoute = AppAdminPermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppWorkspacesWorkspaceIdIndexRoute =
   AppWorkspacesWorkspaceIdIndexRouteImport.update({
@@ -95,11 +137,18 @@ const AppWorkspacesWorkspaceIdBoardsBoardIdCardsCardIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteRouteWithChildren
+  '/admin': typeof AppAdminRouteRouteWithChildren
   '/profile': typeof AppProfileRoute
+  '/auth/accept-invite': typeof AuthAcceptInviteRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/admin/permissions': typeof AppAdminPermissionsRoute
+  '/admin/roles': typeof AppAdminRolesRoute
+  '/admin/settings': typeof AppAdminSettingsRoute
+  '/admin/users': typeof AppAdminUsersRoute
+  '/admin/': typeof AppAdminIndexRoute
   '/workspaces/': typeof AppWorkspacesIndexRoute
   '/workspaces/$workspaceId/': typeof AppWorkspacesWorkspaceIdIndexRoute
   '/workspaces/$workspaceId/boards/$boardId': typeof AppWorkspacesWorkspaceIdBoardsBoardIdRouteRouteWithChildren
@@ -110,10 +159,16 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteRouteWithChildren
   '/profile': typeof AppProfileRoute
+  '/auth/accept-invite': typeof AuthAcceptInviteRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/admin/permissions': typeof AppAdminPermissionsRoute
+  '/admin/roles': typeof AppAdminRolesRoute
+  '/admin/settings': typeof AppAdminSettingsRoute
+  '/admin/users': typeof AppAdminUsersRoute
+  '/admin': typeof AppAdminIndexRoute
   '/workspaces': typeof AppWorkspacesIndexRoute
   '/workspaces/$workspaceId': typeof AppWorkspacesWorkspaceIdIndexRoute
   '/workspaces/$workspaceId/boards/$boardId': typeof AppWorkspacesWorkspaceIdBoardsBoardIdIndexRoute
@@ -124,11 +179,18 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
+  '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/profile': typeof AppProfileRoute
+  '/auth/accept-invite': typeof AuthAcceptInviteRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/_app/admin/permissions': typeof AppAdminPermissionsRoute
+  '/_app/admin/roles': typeof AppAdminRolesRoute
+  '/_app/admin/settings': typeof AppAdminSettingsRoute
+  '/_app/admin/users': typeof AppAdminUsersRoute
+  '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/workspaces/': typeof AppWorkspacesIndexRoute
   '/_app/workspaces/$workspaceId/': typeof AppWorkspacesWorkspaceIdIndexRoute
   '/_app/workspaces/$workspaceId/boards/$boardId': typeof AppWorkspacesWorkspaceIdBoardsBoardIdRouteRouteWithChildren
@@ -140,11 +202,18 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/admin'
     | '/profile'
+    | '/auth/accept-invite'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
     | '/auth/reset-password'
+    | '/admin/permissions'
+    | '/admin/roles'
+    | '/admin/settings'
+    | '/admin/users'
+    | '/admin/'
     | '/workspaces/'
     | '/workspaces/$workspaceId/'
     | '/workspaces/$workspaceId/boards/$boardId'
@@ -155,10 +224,16 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/profile'
+    | '/auth/accept-invite'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
     | '/auth/reset-password'
+    | '/admin/permissions'
+    | '/admin/roles'
+    | '/admin/settings'
+    | '/admin/users'
+    | '/admin'
     | '/workspaces'
     | '/workspaces/$workspaceId'
     | '/workspaces/$workspaceId/boards/$boardId'
@@ -168,11 +243,18 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/auth'
+    | '/_app/admin'
     | '/_app/profile'
+    | '/auth/accept-invite'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
     | '/auth/reset-password'
+    | '/_app/admin/permissions'
+    | '/_app/admin/roles'
+    | '/_app/admin/settings'
+    | '/_app/admin/users'
+    | '/_app/admin/'
     | '/_app/workspaces/'
     | '/_app/workspaces/$workspaceId/'
     | '/_app/workspaces/$workspaceId/boards/$boardId'
@@ -237,11 +319,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/auth/accept-invite': {
+      id: '/auth/accept-invite'
+      path: '/accept-invite'
+      fullPath: '/auth/accept-invite'
+      preLoaderRoute: typeof AuthAcceptInviteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_app/profile': {
       id: '/_app/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/workspaces/': {
@@ -250,6 +346,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/workspaces/'
       preLoaderRoute: typeof AppWorkspacesIndexRouteImport
       parentRoute: typeof AppRouteRoute
+    }
+    '/_app/admin/': {
+      id: '/_app/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/users': {
+      id: '/_app/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AppAdminUsersRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/settings': {
+      id: '/_app/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AppAdminSettingsRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/roles': {
+      id: '/_app/admin/roles'
+      path: '/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AppAdminRolesRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/permissions': {
+      id: '/_app/admin/permissions'
+      path: '/permissions'
+      fullPath: '/admin/permissions'
+      preLoaderRoute: typeof AppAdminPermissionsRouteImport
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/_app/workspaces/$workspaceId/': {
       id: '/_app/workspaces/$workspaceId/'
@@ -282,6 +413,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppAdminRouteRouteChildren {
+  AppAdminPermissionsRoute: typeof AppAdminPermissionsRoute
+  AppAdminRolesRoute: typeof AppAdminRolesRoute
+  AppAdminSettingsRoute: typeof AppAdminSettingsRoute
+  AppAdminUsersRoute: typeof AppAdminUsersRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
+}
+
+const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminPermissionsRoute: AppAdminPermissionsRoute,
+  AppAdminRolesRoute: AppAdminRolesRoute,
+  AppAdminSettingsRoute: AppAdminSettingsRoute,
+  AppAdminUsersRoute: AppAdminUsersRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
+}
+
+const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
+  AppAdminRouteRouteChildren,
+)
+
 interface AppWorkspacesWorkspaceIdBoardsBoardIdRouteRouteChildren {
   AppWorkspacesWorkspaceIdBoardsBoardIdIndexRoute: typeof AppWorkspacesWorkspaceIdBoardsBoardIdIndexRoute
   AppWorkspacesWorkspaceIdBoardsBoardIdCardsCardIdRoute: typeof AppWorkspacesWorkspaceIdBoardsBoardIdCardsCardIdRoute
@@ -301,6 +452,7 @@ const AppWorkspacesWorkspaceIdBoardsBoardIdRouteRouteWithChildren =
   )
 
 interface AppRouteRouteChildren {
+  AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
   AppProfileRoute: typeof AppProfileRoute
   AppWorkspacesIndexRoute: typeof AppWorkspacesIndexRoute
   AppWorkspacesWorkspaceIdIndexRoute: typeof AppWorkspacesWorkspaceIdIndexRoute
@@ -308,6 +460,7 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
   AppProfileRoute: AppProfileRoute,
   AppWorkspacesIndexRoute: AppWorkspacesIndexRoute,
   AppWorkspacesWorkspaceIdIndexRoute: AppWorkspacesWorkspaceIdIndexRoute,
@@ -320,6 +473,7 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 )
 
 interface AuthRouteRouteChildren {
+  AuthAcceptInviteRoute: typeof AuthAcceptInviteRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
@@ -327,6 +481,7 @@ interface AuthRouteRouteChildren {
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
+  AuthAcceptInviteRoute: AuthAcceptInviteRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,

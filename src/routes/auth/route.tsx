@@ -19,10 +19,14 @@ function AuthLayout(): ReactElement<FC> {
 
 export const Route = createFileRoute('/auth')({
   // Authenticated users have no business on the auth pages — except
-  // reset-password, where the recovery-code exchange signs the user in
-  // mid-flow before they choose their new password.
+  // reset-password and accept-invite, where a one-time code signs the user in
+  // mid-flow before they set their password.
   beforeLoad: ({ context, location }): void => {
-    if (context.user != null && !location.pathname.startsWith('/auth/reset-password')) {
+    const midFlow =
+      location.pathname.startsWith('/auth/reset-password') ||
+      location.pathname.startsWith('/auth/accept-invite');
+
+    if (context.user != null && !midFlow) {
       throw redirect({ to: '/' });
     }
   },

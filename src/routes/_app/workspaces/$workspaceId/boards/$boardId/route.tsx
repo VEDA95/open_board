@@ -6,10 +6,12 @@ import { Archive02Icon, MoreHorizontalIcon, Tag01Icon } from '@hugeicons/core-fr
 import { boardQueryOptions, useBoard } from '@lib/hooks/use-board';
 import { useDeleteBoard } from '@lib/hooks/use-boards';
 import { useBoardRealtime } from '@lib/hooks/use-board-realtime';
+import { hasAnyPermission } from '@lib/utils/has-permission';
 import { BoardCanvas } from '@components/board/board-canvas';
 import { BoardFormDialog } from '@components/board/board-form-dialog';
 import { ArchivedCardsSheet } from '@components/board/archived-cards-sheet';
 import { LabelManagerDialog } from '@components/board/label-manager-dialog';
+import { BoardShareDialog } from '@components/sharing/share-dialogs';
 import { ConfirmDialog } from '@components/layout/confirm-dialog';
 import { Badge } from '@components/ui/badge';
 import { Button } from '@components/ui/button';
@@ -24,6 +26,7 @@ import type { FC, ReactElement } from 'react';
 
 function BoardLayout(): ReactElement<FC> {
   const { workspaceId, boardId } = Route.useParams();
+  const { user, permissions } = Route.useRouteContext();
   const router = useRouter();
   const boardQuery = useBoard(boardId);
   const deleteMutation = useDeleteBoard(workspaceId);
@@ -32,8 +35,13 @@ function BoardLayout(): ReactElement<FC> {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [archivedOpen, setArchivedOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const board = boardQuery.data?.board ?? null;
+  const canManageBoard = board != null && (board.user_id === user?.id || hasAnyPermission(permissions, 'board:manage'));
+  // Sharing only matters when the board isn't already reachable by everyone:
+  // either the board itself is private, or its workspace is private.
+  const canShareBoard = canManageBoard && (!board.is_public || !(boardQuery.data?.workspaceIsPublic ?? false));
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -72,6 +80,11 @@ function BoardLayout(): ReactElement<FC> {
                   <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} className="size-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  {canShareBoard && (
+                    <DropdownMenuItem onClick={(): void => setShareOpen(true)}>
+                      Share board
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={(): void => setEditOpen(true)}>
                     Edit board
                   </DropdownMenuItem>
@@ -99,6 +112,7 @@ function BoardLayout(): ReactElement<FC> {
           />
           <ArchivedCardsSheet boardId={boardId} open={archivedOpen} onOpenChange={setArchivedOpen} />
           <LabelManagerDialog boardId={boardId} open={labelsOpen} onOpenChange={setLabelsOpen} />
+          <BoardShareDialog boardId={boardId} open={shareOpen} onOpenChange={setShareOpen} />
           <ConfirmDialog
             open={deleteOpen}
             onOpenChange={setDeleteOpen}

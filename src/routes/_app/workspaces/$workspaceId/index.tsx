@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Add01Icon, MoreHorizontalIcon } from '@hugeicons/core-free-icons';
+import { Add01Icon, MoreHorizontalIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useDeleteWorkspace, useWorkspace, workspaceQueryOptions } from '@lib/hooks/use-workspaces';
 import { useWorkspaceRealtime } from '@lib/hooks/use-workspace-realtime';
+import { hasAnyPermission } from '@lib/utils/has-permission';
 import { WorkspaceFormDialog } from '@components/workspace/workspace-form-dialog';
 import { BoardFormDialog } from '@components/board/board-form-dialog';
+import { WorkspaceShareDialog } from '@components/sharing/share-dialogs';
 import { ConfirmDialog } from '@components/layout/confirm-dialog';
 import { Badge } from '@components/ui/badge';
 import { Button } from '@components/ui/button';
@@ -29,10 +31,12 @@ function WorkspacePage(): ReactElement<FC> {
   const router = useRouter();
   const workspaceQuery = useWorkspace(workspaceId);
   useWorkspaceRealtime(workspaceId);
+  const { user, permissions } = Route.useRouteContext();
   const deleteMutation = useDeleteWorkspace();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [newBoardOpen, setNewBoardOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   if (workspaceQuery.isPending) {
     return (
@@ -55,6 +59,9 @@ function WorkspacePage(): ReactElement<FC> {
   }
 
   const { workspace, boards } = workspaceQuery.data;
+  const canManage = workspace.user_id === user?.id || hasAnyPermission(permissions, 'workspace:manage');
+  // A public workspace is accessible to everyone, so there's nothing to grant.
+  const canShare = canManage && !workspace.is_public;
 
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 p-4 md:p-6">
@@ -71,6 +78,12 @@ function WorkspacePage(): ReactElement<FC> {
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {canShare && (
+            <Button variant="outline" onClick={(): void => setShareOpen(true)}>
+              <HugeiconsIcon icon={UserGroupIcon} strokeWidth={2} className="size-4" />
+              Share
+            </Button>
+          )}
           <Button onClick={(): void => setNewBoardOpen(true)}>
             <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
             New board
@@ -122,6 +135,7 @@ function WorkspacePage(): ReactElement<FC> {
         </div>
       )}
       <WorkspaceFormDialog open={editOpen} onOpenChange={setEditOpen} workspace={workspace} />
+      <WorkspaceShareDialog workspaceId={workspaceId} open={shareOpen} onOpenChange={setShareOpen} />
       <BoardFormDialog open={newBoardOpen} onOpenChange={setNewBoardOpen} workspaceId={workspaceId} />
       <ConfirmDialog
         open={deleteOpen}

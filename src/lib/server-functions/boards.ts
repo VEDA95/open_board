@@ -20,6 +20,7 @@ export type BoardCard = Card & {
 };
 export type BoardDetail = {
   board: Board;
+  workspaceIsPublic: boolean;
   lists: Array<List>;
   cards: Array<BoardCard>;
 };
@@ -82,8 +83,17 @@ export const getBoardFunc = createServerFn({ method: 'GET' })
       }
     }
 
+    // Board sharing is only meaningful when access is restricted somewhere —
+    // the board's visibility plus its workspace's visibility decide that.
+    const { data: workspace } = await supabase
+      .from('workspaces')
+      .select('is_public')
+      .eq('id', boardResult.data.workspace)
+      .single();
+
     return {
       board: boardResult.data,
+      workspaceIsPublic: workspace?.is_public ?? false,
       lists: listsResult.data,
       cards: cardsResult.data.map(({ lists: _lists, card_labels, ...card }): BoardCard => ({
         ...card,
