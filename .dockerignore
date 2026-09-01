@@ -4,6 +4,7 @@
 .gitignore
 .prettierignore
 .prettierrc
+.output
 .env
 node_modules/
 supabase/

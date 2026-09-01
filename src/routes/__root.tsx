@@ -3,11 +3,11 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { TanStackDevtools } from '@tanstack/react-devtools';
 import { ThemeProvider } from '@components/theme-provider';
 import { getUserFunc } from '@lib/server-functions/auth';
-import appCss from '../styles.css?url';
-import type {QueryClient} from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
 import type { AuthState } from '@lib/types/auth';
+import '@/styles.css';
 
-export const Route = createRootRouteWithContext<{queryClient: QueryClient;}>()({
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient; }>()({
   beforeLoad: async (): Promise<AuthState> => await getUserFunc(),
   head: () => ({
     meta: [
@@ -20,12 +20,6 @@ export const Route = createRootRouteWithContext<{queryClient: QueryClient;}>()({
       },
       {
         title: 'TanStack Start Starter',
-      },
-    ],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
       },
     ],
   }),
