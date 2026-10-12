@@ -25,7 +25,8 @@
     "@tanstack/react-devtools": "^0.10.0",
     "@tanstack/react-form": "^1.29.3",
     "@tanstack/react-form-start": "^1.29.3",
-    "@tanstack/react-query": "^5.100.6",
+    "@tanstack/react-query": "^5.104.1",
+    "@tanstack/react-query-devtools": "^5.104.1",
     "@tanstack/react-router": "^1.167.4",
     "@tanstack/react-router-devtools": "^1.166.9",
     "@tanstack/react-router-ssr-query": "^1.166.10",
@@ -49,6 +50,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "5.10.0",
     "@tanstack/devtools-vite": "^0.6.0",
     "@tanstack/eslint-config": "^0.4.0",
     "@testing-library/dom": "^10.4.1",

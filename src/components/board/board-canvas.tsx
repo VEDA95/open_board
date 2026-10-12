@@ -75,16 +75,25 @@ export function BoardCanvas({ workspaceId, boardId, lists, cards }: BoardCanvasP
   const [renameList, setRenameList] = useState<List | null>(null);
   const [deleteList, setDeleteList] = useState<List | null>(null);
   const [renameCard, setRenameCard] = useState<BoardCard | null>(null);
+  const [dragging, setDragging] = useState(false);
+  // Replacing `columns` while dnd-kit is mid-drag (or while our own move is
+  // still persisting) desyncs it from the arrangement its handlers computed
+  // against, so the next dragOver resolves the dragged card to a container it
+  // no longer sits in. Any refetch can trigger this — a realtime echo, a window
+  // refocus — so hold the reconcile until the interaction has fully settled.
+  const interacting = dragging || mutations.isMovePending;
 
   // Adopt server data only when it genuinely differs from what's displayed.
   // This is what makes drops flicker-free: after a move the optimistic cache
   // matches the on-screen arrangement, so the signatures match and no rerender
   // is forced; external changes (create/rename/delete/archive) differ and apply.
   useEffect((): void => {
+    if (interacting) return;
+
     setColumns((current): Columns =>
       signature(current) === serverSignature ? current : serverColumns
     );
-  }, [serverSignature, serverColumns]);
+  }, [serverSignature, serverColumns, interacting]);
 
   const handleCommit = (value: Columns, meta: KanbanCommitMeta<BoardCard>): void => {
     if (meta.kind === 'column') {
@@ -129,6 +138,9 @@ export function BoardCanvas({ workspaceId, boardId, lists, cards }: BoardCanvasP
         onValueChange={setColumns}
         getItemValue={(card: BoardCard): string => card.id}
         onValueCommit={handleCommit}
+        onDragStart={(): void => setDragging(true)}
+        onDragEnd={(): void => setDragging(false)}
+        onDragCancel={(): void => setDragging(false)}
         className="h-full"
       >
         <KanbanBoard className="flex items-start gap-4 sm:grid-cols-none">

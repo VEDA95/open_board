@@ -12,6 +12,8 @@ export const queryKeys = {
   profiles: ['profiles'] as const,
   myProfile: ['my-profile'] as const,
   realtimeConfig: ['realtime-config'] as const,
+  // Prefix of the two app-settings queries below — invalidate it to refresh both.
+  appSettings: ['app-settings'] as const,
   generalAppSettings: ['app-settings', 'general'] as const,
   appAuthSettings: ['app-settings', 'auth'] as const,
   adminSettings: ['admin', 'settings'] as const,

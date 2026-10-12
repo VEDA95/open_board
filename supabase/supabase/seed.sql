@@ -67,6 +67,14 @@ INSERT INTO "public"."user_roles" ("user_id", "role") VALUES
 INSERT INTO "public"."default_roles" ("role", "type") VALUES
 	('68bfba99-62c5-4cd5-8ee3-dd12a35c9d73', 'global');
 
+INSERT INTO "public"."general_settings" (id)
+values (1)
+on conflict (id) do nothing;
+
+INSERT INTO "public"."auth_settings" (id)
+values (1)
+on conflict (id) do nothing;
+
 SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 1, false);
 
 SELECT pg_catalog.setval('"public"."general_settings_id_seq"', 1, false);

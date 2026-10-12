@@ -370,12 +370,26 @@ function Kanban<T>({
         const activeIndex = activeItems.findIndex(
           (item: T) => getItemValue(item) === active.id
         );
+
+        // The dragged item is not in the container we resolved for it — the
+        // value was replaced underneath us mid-drag (an external update, or a
+        // previous dragOver in this same frame already moved it). Bail out:
+        // splice(-1, 1) would silently relocate the *last* item, or splice an
+        // `undefined` hole into the target column when the source is empty.
+        if (activeIndex === -1) return;
+
         let overIndex = overItems.findIndex(
           (item: T) => getItemValue(item) === over.id
         );
 
         // If dropping on the column itself, not an item
         if (isColumn(over.id)) {
+          overIndex = overItems.length;
+        }
+
+        // over.id resolved to this container but isn't one of its items; append
+        // rather than letting splice(-1, …) insert before the last item.
+        if (overIndex === -1) {
           overIndex = overItems.length;
         }
 

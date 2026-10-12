@@ -3,16 +3,20 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@lib/query-keys';
 import { getRealtimeConfigFunc } from '@lib/server-functions/realtime';
 import { getRealtimeClient } from '@lib/utils/supabase-browser';
+import { getClientId } from '@lib/utils/client-id';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@lib/types/supabase';
 
-// Shape of the payload broadcast_changes sends (see the realtime migration).
+// Shape of the payload broadcast_change() sends (see the realtime migrations).
 export type BroadcastPayload = {
   table: string;
   schema: string;
   operation: 'INSERT' | 'UPDATE' | 'DELETE';
   record: Record<string, unknown> | null;
   old_record: Record<string, unknown> | null;
+  // Id of the tab whose request caused the change, or null when the write did
+  // not come through PostgREST (direct SQL, the SQL editor).
+  originator: string | null;
 };
 
 // Token TTL is 1h; refresh well before that and re-auth the socket so private
@@ -47,6 +51,11 @@ export function useRealtimeClient(): SupabaseClient<Database> | null {
 // Subscribe to a private topic and run onMessage for each broadcast. Cleans up
 // the channel on unmount / dependency change. Kept generic so board and
 // workspace hooks share the wiring.
+//
+// Self-originated broadcasts are dropped here rather than in the per-feature
+// hooks: the mutation that caused them already invalidated the affected queries
+// on success, so reacting to the echo would only buy a second identical
+// refetch. Other clients see no `originator` match and refresh as usual.
 export function useBroadcastChannel(
   topic: string | null,
   onMessage: (payload: BroadcastPayload) => void
@@ -61,7 +70,11 @@ export function useBroadcastChannel(
       .on(
         'broadcast',
         { event: 'db_change' },
-        (message: { payload: BroadcastPayload }): void => onMessage(message.payload)
+        (message: { payload: BroadcastPayload }): void => {
+          if (message.payload.originator === getClientId()) return;
+
+          onMessage(message.payload);
+        }
       )
       .subscribe();
 
