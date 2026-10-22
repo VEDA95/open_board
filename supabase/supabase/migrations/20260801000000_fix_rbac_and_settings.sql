@@ -203,9 +203,8 @@ ALTER TABLE public.auth_settings ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.default_roles ENABLE ROW LEVEL SECURITY;
 
-INSERT INTO public.auth_settings (id)
-VALUES (1)
-ON CONFLICT (id) DO NOTHING;
+-- The auth_settings singleton row (id = 1) is seeded in supabase/seed.sql,
+-- not here — this migration only owns the schema.
 
 
   create policy "auth_settings_select"

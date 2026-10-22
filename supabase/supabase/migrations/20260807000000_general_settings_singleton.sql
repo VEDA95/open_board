@@ -1,7 +1,10 @@
--- The general_settings singleton row was never seeded (the seed only sets the
--- id sequence). Without it, .single() reads fail with "Cannot coerce the
--- result to a single JSON object" — hit by getAdminSettingsFunc and the
--- announcement-banner query. Insert the row (id = 1) with its column defaults.
-INSERT INTO public.general_settings (id)
-VALUES (1)
-ON CONFLICT (id) DO NOTHING;
+-- Superseded: this migration used to insert the general_settings singleton
+-- row (id = 1). That is seed data, so it now lives in supabase/seed.sql
+-- alongside the auth_settings singleton.
+--
+-- The file is kept as an empty no-op rather than deleted because its version
+-- is already recorded in supabase_migrations.schema_migrations on deployed
+-- databases; removing it would desync local and remote migration history.
+--
+-- Existing deployments already have the row, so dropping the insert here does
+-- not remove any data.

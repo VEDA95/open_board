@@ -67,7 +67,9 @@ Schema lives in `supabase/supabase/migrations/`. Core kanban tables (`workspaces
 - The `workspaces`/`boards` **select** policies check `user_id = auth.uid()` directly on the row (not only via the `check_*` functions) — required for `INSERT ... RETURNING` to see the just-inserted row; don't "simplify" that away.
 - Auth settings: `auth_settings` (singleton, `id = 1`) holds `enable_registration`; `default_roles` holds the roles granted to new users, scoped by `type` enum (`global`, `public_registration`, `private_registration`, `sso_provider` + `provider` column). The `handle_new_user` trigger creates the profile row and assigns matching default roles (invited users are detected via `invited_at`).
 - Inserts into `workspaces`/`boards` must set `user_id` explicitly to `auth.uid()` — the insert policies require it and the columns have no default.
-- Seed (`supabase/supabase/seed.sql`): permissions, roles `superuser`/`user`/`admin`, storage buckets, and the `user` role as a `global` default role.
+- Seed (`supabase/supabase/seed.sql`): permissions, roles `superuser`/`user`/`admin`, `role_permissions`, storage buckets, the `auth_settings`/`general_settings` singletons, and the `user` role as a `global` default role. **Migrations own schema only — all data inserts live in the seed**, so don't add `INSERT`s to a migration. The seed is idempotent (upserts keyed on the canonical permission/role UUIDs — keep those stable, `workspace_permissions`/`board_permissions` reference them) and needs no superuser, so it's safe to re-run.
+- **`supabase db push` does not run `seed.sql`** — only `db reset` and branching do. For a self-hosted deploy the seed is a required step after migrations: `psql "$DATABASE_URL" -f supabase/seed.sql`. Skipping it yields an empty RBAC layer (every user has zero permissions) and no storage buckets (all uploads fail).
+- Superusers are granted by email lookup, not a hardcoded uuid: `psql … -c "SET seed.superuser_email = 'you@example.com'" -f supabase/seed.sql` (no-op if that account hasn't signed up yet). Set it for every reset via `[db.settings] seed.superuser_email` in `config.toml`.
 
 ### Kanban board (Phase 2 patterns)
 
