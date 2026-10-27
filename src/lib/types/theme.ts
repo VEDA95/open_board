@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
-export type Theme = 'dark' | 'light' | 'system';
+export type ResolvedTheme = 'dark' | 'light';
+export type Theme = ResolvedTheme | 'system';
 export type ThemeProviderProps = {
   children: ReactNode
   defaultTheme?: Theme

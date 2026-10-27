@@ -1,7 +1,7 @@
 import { Link, useParams, useRouter } from '@tanstack/react-router';
 import { useMutation } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Folder01Icon, KanbanIcon, Logout01Icon, Settings02Icon, UnfoldMoreIcon, UserIcon } from '@hugeicons/core-free-icons';
+import { Folder01Icon, Logout01Icon, Settings02Icon, UnfoldMoreIcon, UserIcon } from '@hugeicons/core-free-icons';
 import { logoutFunc } from '@lib/server-functions/auth';
 import { useWorkspaces } from '@lib/hooks/use-workspaces';
 import { useMyProfile } from '@lib/hooks/use-profile';
@@ -30,6 +30,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@components/ui/sidebar';
+import {useTheme} from '@lib/context/theme';
 import type { FC, ReactElement } from 'react';
 import type { User } from '@supabase/supabase-js';
 
@@ -91,6 +92,7 @@ export function AppSidebar({ user, permissions }: AppSidebarProps): ReactElement
   const workspacesQuery = useWorkspaces();
   const params = useParams({ strict: false });
   const showAdmin = canAccessAdmin(permissions);
+  const { theme } = useTheme();
 
   return (
     <Sidebar>
@@ -98,9 +100,8 @@ export function AppSidebar({ user, permissions }: AppSidebarProps): ReactElement
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link to="/workspaces" />}>
-              <span className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg">
-                <HugeiconsIcon icon={KanbanIcon} strokeWidth={2} className="size-4" />
-              </span>
+              <img src="/logo/openboard_logo.webp" loading={theme === 'dark' ? 'eager' : 'lazy'} className="size-10 hidden dark:inline-block"/>
+              <img src="/logo/openboard_logo_dark.webp" loading={theme === 'light' ? 'eager' : 'lazy'} className="size-10 inline-block dark:hidden"/>
               <span className="text-base font-semibold">OpenBoard</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

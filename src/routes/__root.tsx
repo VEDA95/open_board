@@ -4,6 +4,7 @@ import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools';
 import { TanStackDevtools } from '@tanstack/react-devtools';
 import { ThemeProvider } from '@components/theme-provider';
 import { getUserFunc } from '@lib/server-functions/auth';
+import { SSR_FAVICON_THEME, getFaviconHeadLinks } from '@lib/utils/favicon';
 import type { QueryClient } from '@tanstack/react-query';
 import type { AuthState } from '@lib/types/auth';
 import '@/styles.css';
@@ -23,6 +24,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient; }>()
         title: 'TanStack Start Starter',
       },
     ],
+    links: [
+      ...getFaviconHeadLinks(SSR_FAVICON_THEME),
+      {
+        rel: 'manifest',
+        href: '/site.webmanifest'
+      }
+    ]
   }),
   shellComponent: RootDocument,
 });

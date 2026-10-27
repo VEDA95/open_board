@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ScriptOnce } from '@tanstack/react-router';
 import {ThemeProviderContext} from '@lib/context/theme';
-import {applyTheme, getThemeScript} from '@lib/utils/theme';
+import {applyTheme, getThemeScript, resolveTheme} from '@lib/utils/theme';
+import {applyFavicon} from '@lib/utils/favicon';
 import type {FC, ReactElement} from 'react';
 import type {Theme, ThemeProviderProps} from '@lib/types/theme';
 
@@ -15,6 +16,7 @@ export function ThemeProvider({
  
   useEffect((): void => {
     const stored = localStorage.getItem(storageKey);
+
     setThemeState(
       stored === 'light' || stored === 'dark' || stored === 'system'
         ? stored
@@ -23,18 +25,23 @@ export function ThemeProvider({
     setMounted(true);
   }, [defaultTheme, storageKey]);
  
-  useEffect(() => {
-    if (!mounted) return;
+  useEffect((): (() => void) | undefined => {
+    if(!mounted) return;
+
     applyTheme(theme);
-  }, [theme, mounted]);
- 
-  useEffect(() => {
-    if (!mounted || theme !== 'system') return;
+    applyFavicon(resolveTheme(theme));
+
+    if (theme !== 'system') return;
  
     const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = () => applyTheme('system');
+    const onChange = (): void => {
+      applyTheme('system');
+      applyFavicon(resolveTheme('system'));
+    };
+
     media.addEventListener('change', onChange);
-    return () => media.removeEventListener('change', onChange);
+
+    return (): void => media.removeEventListener('change', onChange);
   }, [theme, mounted]);
  
   const setTheme = (next: Theme) => {
