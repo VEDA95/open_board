@@ -141,6 +141,9 @@ function ResetPasswordPage(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/auth/reset-password')({
+  head: () => ({
+    meta: [{title: 'Open Board - Reset Password'}]
+  }),
   validateSearch: (search: Record<string, unknown>): ResetPasswordSearch => ({
     code: typeof search.code === 'string' ? search.code : undefined,
     invalid: search.invalid === true || undefined

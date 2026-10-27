@@ -190,6 +190,9 @@ function RegisterPage(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/auth/register')({
+  head: () => ({
+    meta: [{title: 'Open Board - Create User Account'}]
+  }),
   beforeLoad: async (): Promise<void> => {
     const authSettings: AuthSettings = await getAuthSettingsFunc();
 

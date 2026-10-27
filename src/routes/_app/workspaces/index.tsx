@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
+import {useSuspenseQuery} from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Add01Icon } from '@hugeicons/core-free-icons';
 import { useWorkspaces, workspacesQueryOptions } from '@lib/hooks/use-workspaces';
@@ -48,8 +49,11 @@ function WorkspacesPage(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/_app/workspaces/')({
+  head: () => ({
+    meta: [{title: 'Open Board - Workspaces'}]
+  }),
   loader: async ({ context }): Promise<void> => {
-    await context.queryClient.ensureQueryData(workspacesQueryOptions());
+    await context.queryClient.query({...workspacesQueryOptions(), staleTime: 'static'});
   },
   component: WorkspacesPage
 });

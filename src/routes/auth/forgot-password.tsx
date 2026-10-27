@@ -101,4 +101,9 @@ function ForgotPasswordPage(): ReactElement<FC> {
   );
 }
 
-export const Route = createFileRoute('/auth/forgot-password')({ component: ForgotPasswordPage });
+export const Route = createFileRoute('/auth/forgot-password')({
+  head: () => ({
+    meta: [{title: 'Open Board - Reset Forgotten Password'}]
+  }),
+  component: ForgotPasswordPage
+});

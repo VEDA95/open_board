@@ -294,8 +294,11 @@ function AdminSettingsPage(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/_app/admin/settings')({
+  head: () => ({
+    meta: [{title: 'Open Board - Manage Settings'}]
+  }),
   loader: async ({ context }): Promise<void> => {
-    await context.queryClient.ensureQueryData(adminSettingsQueryOptions());
+    await context.queryClient.query({...adminSettingsQueryOptions(), staleTime: 'static'});
   },
   component: AdminSettingsPage
 });

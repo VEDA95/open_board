@@ -23,6 +23,7 @@ import {
 } from '@components/ui/dropdown-menu';
 import { Skeleton } from '@components/ui/skeleton';
 import type { FC, ReactElement } from 'react';
+import type {BoardDetail} from '@lib/server-functions/boards';
 
 function BoardLayout(): ReactElement<FC> {
   const { workspaceId, boardId } = Route.useParams();
@@ -146,8 +147,11 @@ function BoardLayout(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/_app/workspaces/$workspaceId/boards/$boardId')({
-  loader: async ({ context, params }): Promise<void> => {
-    await context.queryClient.ensureQueryData(boardQueryOptions(params.boardId));
+  head: ({loaderData}) => ({
+    meta: [{title: `Open Board - Boards - ${loaderData?.board.name}`}]
+  }),
+  loader: async ({ context, params }): Promise<BoardDetail> => {
+    return await context.queryClient.query({...boardQueryOptions(params.boardId), staleTime: 'static'});
   },
   component: BoardLayout
 });

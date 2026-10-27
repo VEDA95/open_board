@@ -125,8 +125,11 @@ function AdminRolesPage(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/_app/admin/roles')({
+  head: () => ({
+    meta: [{title: 'Open Board - Manage Roles'}]
+  }),
   loader: async ({ context }): Promise<void> => {
-    await context.queryClient.ensureQueryData(rolesQueryOptions());
+    await context.queryClient.query({...rolesQueryOptions(), staleTime: 'static'});
   },
   component: AdminRolesPage
 });

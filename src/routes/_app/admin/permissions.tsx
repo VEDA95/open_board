@@ -96,8 +96,11 @@ function AdminPermissionsPage(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/_app/admin/permissions')({
+  head: () => ({
+    meta: [{title: 'Open Board - Manage Permissions'}]
+  }),
   loader: async ({ context }): Promise<void> => {
-    await context.queryClient.ensureQueryData(rolesQueryOptions());
+    await context.queryClient.query({...rolesQueryOptions(), staleTime: 'static'});
   },
   component: AdminPermissionsPage
 });

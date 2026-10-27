@@ -163,10 +163,13 @@ function AdminUsersPage(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/_app/admin/users')({
+  head: () => ({
+    meta: [{title: 'Open Board - Manage Users'}]
+  }),
   loader: async ({ context }): Promise<void> => {
     await Promise.all([
-      context.queryClient.ensureQueryData(usersQueryOptions()),
-      context.queryClient.ensureQueryData(adminSettingsQueryOptions())
+      context.queryClient.query({...usersQueryOptions(), staleTime: 'static'}),
+      context.queryClient.query({...adminSettingsQueryOptions(), staleTime: 'static'})
     ]);
   },
   component: AdminUsersPage

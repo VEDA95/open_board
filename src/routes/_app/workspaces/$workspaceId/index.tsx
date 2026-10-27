@@ -25,6 +25,7 @@ import {
 } from '@components/ui/dropdown-menu';
 import { Skeleton } from '@components/ui/skeleton';
 import type { FC, ReactElement } from 'react';
+import type { WorkspaceDetail } from '@lib/server-functions/workspaces';
 
 function WorkspacePage(): ReactElement<FC> {
   const { workspaceId } = Route.useParams();
@@ -163,8 +164,11 @@ function WorkspacePage(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/_app/workspaces/$workspaceId/')({
-  loader: async ({ context, params }): Promise<void> => {
-    await context.queryClient.ensureQueryData(workspaceQueryOptions(params.workspaceId));
+  head: ({loaderData}) => ({
+    meta: [{title: `Open Board - Workspaces - ${loaderData?.workspace.name}`}]
+  }),
+  loader: async ({ context, params }): Promise<WorkspaceDetail> => {
+    return await context.queryClient.query({...workspaceQueryOptions(params.workspaceId), staleTime: 'static'});
   },
   component: WorkspacePage
 });

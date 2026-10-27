@@ -130,6 +130,9 @@ function AcceptInvitePage(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/auth/accept-invite')({
+  head: () => ({
+    meta: [{title: 'Open Board - Create User Account'}]
+  }),
   validateSearch: (search: Record<string, unknown>): AcceptInviteSearch => ({
     code: typeof search.code === 'string' ? search.code : undefined,
     invalid: search.invalid === true || undefined

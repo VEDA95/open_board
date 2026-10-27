@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@components/ui/dialog';
 import type { FC, ReactElement } from 'react';
+import type { CardDetail } from '@lib/server-functions/cards';
 
 function CardModalRoute(): ReactElement<FC> {
   const { workspaceId, boardId, cardId } = Route.useParams();
@@ -39,8 +40,11 @@ function CardModalRoute(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/_app/workspaces/$workspaceId/boards/$boardId/cards/$cardId')({
-  loader: async ({ context, params }): Promise<void> => {
-    await context.queryClient.ensureQueryData(cardQueryOptions(params.cardId));
+  head: ({loaderData}) => ({
+    meta: [{title: `Open Board - Cards - ${loaderData?.card.name}`}]
+  }),
+  loader: async ({ context, params }): Promise<CardDetail> => {
+    return await context.queryClient.query({...cardQueryOptions(params.cardId), staleTime: 'static'});
   },
   component: CardModalRoute
 });

@@ -237,8 +237,11 @@ function ProfilePage(): ReactElement<FC> {
 }
 
 export const Route = createFileRoute('/_app/profile')({
+  head: () => ({
+    meta: [{title: 'Open Board - Profile'}]
+  }),
   loader: async ({ context }): Promise<void> => {
-    await context.queryClient.ensureQueryData(myProfileQueryOptions());
+    await context.queryClient.query({...myProfileQueryOptions(), staleTime: 'static'});
   },
   component: ProfilePage
 });
